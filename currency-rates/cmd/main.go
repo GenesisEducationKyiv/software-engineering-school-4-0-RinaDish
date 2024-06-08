@@ -22,7 +22,7 @@ func main() {
 	config.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(time.RFC3339)
 
 	l, _ := config.Build()
-	defer l.Sync()
+	defer l.Sync() // nolint:errcheck
 	logger := l.Sugar()
 
 	ctx := context.Background()

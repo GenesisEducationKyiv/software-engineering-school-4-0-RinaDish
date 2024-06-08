@@ -32,7 +32,10 @@ func (h RateHandler) GetCurrentRate(w http.ResponseWriter, r *http.Request) {
 	if err == nil { 
 		w.WriteHeader(http.StatusOK)
 		strRate := strconv.FormatFloat(rate, 'f', -1, 64)
-		w.Write([]byte(strRate))
+		_, err := w.Write([]byte(strRate))
+		if err != nil {
+			h.l.Error(err)
+		}
 		return
 	} 
 	w.WriteHeader(http.StatusBadRequest)

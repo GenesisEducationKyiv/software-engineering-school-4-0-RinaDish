@@ -27,7 +27,8 @@ func (r Rate) GetDollarRate(ctx context.Context) (float64, error) {
 	var rate float64
 	var err error
 	for _, c := range r.rateClients {
-		ctx, _ := context.WithTimeout(ctx, 500 * time.Millisecond)
+		ctx, cancel := context.WithTimeout(ctx, 500 * time.Millisecond)
+		defer cancel()
 		rate, err = c.GetDollarRate(ctx)
 		if err == nil { break }
 	}

@@ -25,7 +25,19 @@ jobs:
           args: --timeout 5m
           working-directory: currency-rates/
 
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "currency-rates/go.mod"
+          check-latest: true
+          
       - name: Tests
         working-directory: currency-rates/
         run: go test -v ./...
-          
+        

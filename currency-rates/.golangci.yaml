@@ -7,7 +7,7 @@ linters:
     - typecheck
     - unused
     - wsl
-    - mnd
+    - gomnd
 issues:
   exclude-rules:
     - text: "declarations should never be cuddled"

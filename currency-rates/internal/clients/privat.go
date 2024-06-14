@@ -32,8 +32,6 @@ func NewPrivatClient(l *zap.SugaredLogger) PrivatClient {
 }
 
 func (n PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
-
-
   url := "https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5"
 
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -48,6 +46,7 @@ func (n PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
     n.l.Info(err)
     return 0.0, err
   }
+
   defer res.Body.Close()
 
   body, err := io.ReadAll(res.Body)

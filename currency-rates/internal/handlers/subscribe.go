@@ -20,7 +20,6 @@ type SubscribeHandler struct {
 }
 
 func NewSubscribeHandler(l *zap.SugaredLogger, r Db) SubscribeHandler {
-
 	return SubscribeHandler{
 		l: l,
 		r: r,
@@ -28,7 +27,6 @@ func NewSubscribeHandler(l *zap.SugaredLogger, r Db) SubscribeHandler {
 }
 
 func (h SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *http.Request) {
-
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Form parse error", http.StatusConflict)

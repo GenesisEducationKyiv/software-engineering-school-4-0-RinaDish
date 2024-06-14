@@ -60,5 +60,6 @@ func (app *App) Run(ctx context.Context) error {
 	r.Post("/subscribe", subscriptionHandler.CreateSubscription)
 
 	app.l.Info("app run")
+	
 	return http.ListenAndServe(app.cfg.Address, r)
 }

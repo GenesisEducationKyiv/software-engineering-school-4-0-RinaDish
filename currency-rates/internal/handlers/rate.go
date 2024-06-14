@@ -18,7 +18,6 @@ type RateHandler struct {
 }
 
 func NewRateHandler(l *zap.SugaredLogger, r RateClient) RateHandler {
-
 	return RateHandler{
 		l: l,
 		rateClient: r,
@@ -31,10 +30,15 @@ func (h RateHandler) GetCurrentRate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err == nil { 
 		w.WriteHeader(http.StatusOK)
+
 		strRate := strconv.FormatFloat(rate, 'f', -1, 64)
-		w.Write([]byte(strRate))
+		_, err := w.Write([]byte(strRate))
+		if err != nil {
+			h.l.Error(err)
+		}
+
 		return
 	} 
-	w.WriteHeader(http.StatusBadRequest)
 	
+	w.WriteHeader(http.StatusBadRequest)
 }

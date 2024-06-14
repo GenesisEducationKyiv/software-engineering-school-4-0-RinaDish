@@ -13,6 +13,7 @@ type Repository struct {
 
 func NewAdminRepository(url string, l *zap.SugaredLogger) (*Repository, error) {
 	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
+	
 	return &Repository{
 		DB:     db,
 		logger: l.With("service", "repository"),

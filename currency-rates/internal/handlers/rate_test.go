@@ -28,6 +28,7 @@ func (c failedRateClient) GetDollarRate(ctx context.Context) (float64, error) {
 
 func TestGetCurrentRate(main *testing.T) {
 	l := zap.NewNop()
+	
 	main.Run("succesfully returned rates", func(t *testing.T) {
 		expectedRate := float64(10.0)
 		s := successRateClient{}
@@ -38,6 +39,7 @@ func TestGetCurrentRate(main *testing.T) {
 
 		h.GetCurrentRate(w, req)
 		res := w.Result()
+
 		defer res.Body.Close()
 		data, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
@@ -58,6 +60,7 @@ func TestGetCurrentRate(main *testing.T) {
 
 		h.GetCurrentRate(w, req)
 		res := w.Result()
+
 		defer res.Body.Close()
 		data, err := io.ReadAll(res.Body)
 

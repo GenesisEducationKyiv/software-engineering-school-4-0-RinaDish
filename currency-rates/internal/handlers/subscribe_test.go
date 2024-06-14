@@ -30,6 +30,7 @@ func (d failDb) SetEmail(ctx context.Context, email string) error {
 
 func TestCreateSubscription(main *testing.T) {
 	l := zap.NewNop()
+
 	main.Run("succesfully", func(t *testing.T) {
 		d := successDb{}
 		h := handlers.NewSubscribeHandler(l.Sugar(), d)
@@ -44,6 +45,7 @@ func TestCreateSubscription(main *testing.T) {
 
 		h.CreateSubscription(w, req)
 		res := w.Result()
+
 		defer res.Body.Close()
 		data, err := io.ReadAll(res.Body)
 
@@ -66,6 +68,7 @@ func TestCreateSubscription(main *testing.T) {
 
 		h.CreateSubscription(w, req)
 		res := w.Result()
+
 		defer res.Body.Close()
 		data, err := io.ReadAll(res.Body)
 
@@ -88,6 +91,7 @@ func TestCreateSubscription(main *testing.T) {
 
 		h.CreateSubscription(w, req)
 		res := w.Result()
+		
 		defer res.Body.Close()
 		data, err := io.ReadAll(res.Body)
 

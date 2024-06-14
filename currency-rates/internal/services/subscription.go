@@ -24,7 +24,6 @@ type SubscriptionService struct {
 }
 
 func NewSubscriptionService(l *zap.SugaredLogger, d SubscriptionDb, s SubscriptionSender, r RateClient) SubscriptionService{
-
 	return SubscriptionService{
 		db: d,
 		sender: s,

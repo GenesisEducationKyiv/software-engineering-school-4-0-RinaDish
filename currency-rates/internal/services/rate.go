@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const ctxTime = 500 * time.Millisecond;
+const apiCallTimeout = 500 * time.Millisecond;
 
 type RateClient interface {
 	GetDollarRate(ctx context.Context) (float64, error) 
@@ -30,7 +30,7 @@ func (r Rate) GetDollarRate(ctx context.Context) (float64, error) {
 	var err error
 
 	for _, c := range r.rateClients {
-		ctx, cancel := context.WithTimeout(ctx, ctxTime)
+		ctx, cancel := context.WithTimeout(ctx, apiCallTimeout)
 		defer cancel()
 
 		rate, err = c.GetDollarRate(ctx)

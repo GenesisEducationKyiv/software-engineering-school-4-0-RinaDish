@@ -36,10 +36,14 @@ func (app *App) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	adminRepository := repo.NewAdminRepository(db, app.l)
 
-	subscriptionSender := services.NewEmail(app.cfg.EmailAddress, app.cfg.EmailPass, app.l)
+	subscriptionSender, err := services.NewEmail(app.cfg.EmailAddress, app.cfg.EmailPass, app.l)
+	if err != nil {
+		return err
+	}
+
 	subscriptionService := services.NewSubscriptionService(app.l, adminRepository, subscriptionSender, rateService)
 	ratesHandler := handlers.NewRateHandler(app.l, rateService)
 	subscriptionHandler := handlers.NewSubscribeHandler(app.l, adminRepository)

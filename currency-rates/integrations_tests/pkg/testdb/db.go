@@ -29,8 +29,10 @@ func GetEmail(t *testing.T, dsn, dbName, email string) string {
 	defer db.Close()
 
 	var res string
+	
 	row := db.QueryRow(fmt.Sprintf(`SELECT emails.email FROM emails where emails.email = '%s';`, email))
-	row.Scan(&res)
+
+	_ = row.Scan(&res)
 
 	return res
 }

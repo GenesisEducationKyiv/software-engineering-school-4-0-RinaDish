@@ -32,11 +32,7 @@ func (app *App) Run(ctx context.Context) error {
 	privatClient := clients.NewPrivatClient(app.l)
 	rateService := services.NewRate(app.l, []services.RateClient{nbuClient, privatClient})
 
-	db, err := gorm.Open(postgres.Open(app.cfg.DBUrl), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-
+	db, _ := gorm.Open(postgres.Open(app.cfg.DBUrl), &gorm.Config{}) //err
 	adminRepository := repo.NewAdminRepository(db, app.l)
 
 	subscriptionSender, err := services.NewEmail(app.cfg.EmailAddress, app.cfg.EmailPass, app.l)

@@ -25,6 +25,22 @@ func NewApp(c Config, l *zap.SugaredLogger) *App {
 	}
 }
 
+func (app *App) initCron(ctx context.Context, subscriptionService services.SubscriptionService) gocron.Scheduler {
+	s, _ := gocron.NewScheduler()
+	
+	_, _ = s.NewJob(
+		gocron.CronJob(
+			"0 2 * * *",
+			false,
+		),
+		gocron.NewTask(
+			subscriptionService.NotifySubscribers, ctx,
+		),
+	)
+	
+	return s;
+}
+
 func (app *App) Run(ctx context.Context) error {
 	nbuClient := clients.NewNBUClient(app.l)
 	privatClient := clients.NewPrivatClient(app.l)
@@ -44,19 +60,8 @@ func (app *App) Run(ctx context.Context) error {
 	ratesHandler := handlers.NewRateHandler(app.l, rateService)
 	subscriptionHandler := handlers.NewSubscribeHandler(app.l, adminRepository)
 
-	s, _ := gocron.NewScheduler()
+	s := app.initCron(ctx, subscriptionService)
 	defer func() { _ = s.Shutdown() }()
-	
-	_, _ = s.NewJob(
-		gocron.CronJob(
-			"0 2 * * *",
-			false,
-		),
-		gocron.NewTask(
-			subscriptionService.NotifySubscribers, ctx,
-		),
-	)
-
 	s.Start()
 
 	r := chi.NewRouter()

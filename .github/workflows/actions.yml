@@ -57,7 +57,17 @@ jobs:
         run: docker-compose  -f docker-compose.test.yaml up --build -d
 
       - name: Wait for postgress
-        run: waitfor localhost 8632 60
+        run: |
+        for i in {1..10}; do
+          if nc -zv localhost 8632; then
+            echo "Service is up!"
+            exit 0
+          fi
+          echo "Waiting for service to be available..."
+          sleep 10
+        done
+        echo "Service did not become available in time"
+        exit 1
           
       - name: Integration Tests
         working-directory: currency-rates/

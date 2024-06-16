@@ -73,5 +73,5 @@ jobs:
         working-directory: currency-rates/
         run: go test -v -tags=integration ./...    
 
-      - name: Run Docker container
+      - name: Down Docker container
         run: docker-compose  -f docker-compose.test.yaml down

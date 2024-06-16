@@ -1,3 +1,5 @@
+//go:build integration
+
 package currencyrates
 
 import (
@@ -34,15 +36,15 @@ func TestUserHandler(main *testing.T) {
 		testdb.Reset(t, testdb.GetTemplateDBDSN(), testdb.DBName, testdb.TemplateDBName)
 
 		userHandler, _ := setupUserHandler(t)
-
+		email := "testemail@gmail.com"
 		form := url.Values{}
-		form.Add("email", "testuser")
+		form.Add("email", email)
 
 		formData := form.Encode()
 
 		req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(formData))
 
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 		w := httptest.NewRecorder()
 		userHandler.CreateSubscription(w, req) 
@@ -52,6 +54,10 @@ func TestUserHandler(main *testing.T) {
 		responseBody, err := io.ReadAll(response.Body)
 		fmt.Println(responseBody)
 		require.NoError(t, err)
-		require.Equal(t, http.StatusConflict, response.StatusCode)
+		require.Equal(t, http.StatusOK, response.StatusCode)
+
+		q := testdb.GetEmail(t, testdb.GetDBDSN(), testdb.DBName, email)
+
+		require.Equal(t, q, email)
 	})
 }

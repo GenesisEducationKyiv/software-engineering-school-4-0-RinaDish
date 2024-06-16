@@ -41,3 +41,27 @@ jobs:
         working-directory: currency-rates/
         run: go test -v ./...
         
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "currency-rates/go.mod"
+          check-latest: true
+
+      - name: Run Docker container
+        run: docker-compose  -f docker-compose.test.yaml up --build -d
+
+      - name: Wait for postgress
+        run: waitfor localhost 8632 60
+          
+      - name: Integration Tests
+        working-directory: currency-rates/
+        run: go test -v -tags=integration ./...    
+
+      - name: Run Docker container
+        run: docker-compose  -f docker-compose.test.yaml down

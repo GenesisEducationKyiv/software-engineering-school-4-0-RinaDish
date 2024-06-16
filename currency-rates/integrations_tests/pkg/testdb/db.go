@@ -23,6 +23,18 @@ func GetTemplateDBDSN() string {
 	return fmt.Sprintf(dsnTemplate, TemplateDBName)
 }
 
+func GetEmail(t *testing.T, dsn, dbName, email string) string {
+	db, err := sql.Open("postgres", dsn)
+	require.NoError(t, err)
+	defer db.Close()
+
+	var res string
+	row := db.QueryRow(fmt.Sprintf(`SELECT emails.email FROM emails where emails.email = '%s';`, email))
+	row.Scan(&res)
+
+	return res
+}
+
 func Reset(t *testing.T, dsn, dbName, tplDBName string) {
 	db, err := sql.Open("postgres", dsn)
 	require.NoError(t, err)

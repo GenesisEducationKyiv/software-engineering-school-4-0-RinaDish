@@ -35,12 +35,12 @@ func (app *App) Run(ctx context.Context) error {
 		return err
 	}
 
-	subscriptionSender, err := services.NewEmail(app.cfg.EmailAddress, app.cfg.EmailPass, app.l)
+	emailSender, err := services.NewEmail(app.cfg.EmailAddress, app.cfg.EmailPass, app.l)
 	if err != nil {
 		return err
 	}
 
-	subscriptionService := services.NewSubscriptionService(app.l, adminRepository, subscriptionSender, rateService)
+	subscriptionService := services.NewSubscriptionService(app.l, adminRepository, emailSender, rateService)
 	ratesHandler := handlers.NewRateHandler(app.l, rateService)
 	subscriptionHandler := handlers.NewSubscribeHandler(app.l, adminRepository)
 

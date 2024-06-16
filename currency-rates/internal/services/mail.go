@@ -2,60 +2,67 @@ package services
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/smtp"
 
 	"go.uber.org/zap"
 )
 
 const serverName = "smtp.gmail.com"
+const serverPort = "587"
+
 type Mail struct {
-	from string
-	pass string
-	client   *smtp.Client
-	l *zap.SugaredLogger
+	from   string
+	pass   string
+	client *smtp.Client
+	l      *zap.SugaredLogger
 }
 
 func NewEmail(from string, pass string, l *zap.SugaredLogger) (*Mail, error) {
-	client, err := smtp.Dial("smtp.gmail.com:587")
-	if err != nil {
-		return nil, err
-	}
-
-	tlsconfig := &tls.Config{
-		ServerName: serverName,
-	}
-	
-	if err = client.StartTLS(tlsconfig); err != nil {
-		return nil, err
-	}
-
-	auth := smtp.PlainAuth("", from, pass, serverName)
-	if err = client.Auth(auth); err != nil {
-		return nil, err
-	}
-	
-	return &Mail{
+	m := &Mail{
 		from: from,
 		pass: pass,
-		client: client,
-		l: l,
-	}, nil
+		l:    l,
+	}
+
+	if err := m.initClient(); err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }
 
-func (m Mail) Send(to, body string) {
+func (m *Mail) initClient() error {
+	client, err := smtp.Dial(serverName + ":" + serverPort)
+	if err != nil {
+		return err
+	}
+
+	if err = client.StartTLS(&tls.Config{
+		ServerName: serverName,
+	}); err != nil {
+		return err
+	}
+
+	auth := smtp.PlainAuth("", m.from, m.pass, serverName)
+	if err = client.Auth(auth); err != nil {
+		return err
+	}
+
+	m.client = client
+	
+	return nil
+}
+
+func (m *Mail) Send(to, body string) {
 	if m.client == nil {
 		m.l.Infof("SMTP client is not connected")
 		return
 	}
 
-	from := m.from
+	msg := fmt.Sprintf("From: %s\nTo: %s\nSubject: Dollar Rate\n\n%s", m.from, to, body)
 
-	msg := "From: " + from + "\n" +
-		"To: " + to + "\n" +
-		"Subject: Dollar Rate\n\n" +
-		body
-
-	if err := m.client.Mail(from); err != nil {
+	if err := m.client.Mail(m.from); err != nil {
 		m.l.Info(err)
 		return
 	}
@@ -82,6 +89,6 @@ func (m Mail) Send(to, body string) {
 		m.l.Info(err)
 		return
 	}
-	
+
 	m.l.Infof("email sent to %s", to)
 }

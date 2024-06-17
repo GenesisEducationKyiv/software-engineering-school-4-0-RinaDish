@@ -11,3 +11,9 @@ lint:
 test:
 	@echo "Running tests..."
 	go test -v ./...
+
+.PHONY: loadtest 
+loadtest:
+	@echo "Running tests..."
+	go run load_tests/load.go
+	vegeta plot results.bin > results.html

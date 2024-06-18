@@ -9,70 +9,54 @@ import (
 	"github.com/RinaDish/currency-rates/internal/repo"
 	"github.com/RinaDish/currency-rates/internal/routers"
 	"github.com/RinaDish/currency-rates/internal/services"
-	"github.com/go-co-op/gocron/v2"
+	"github.com/RinaDish/currency-rates/internal/scheduler"
 	"go.uber.org/zap"
 )
 
 type App struct {
 	cfg Config
 	l   *zap.SugaredLogger
+	subscriptionHandler handlers.SubscribeHandler
+	ratesHandler handlers.RateHandler
+	subscriptionService services.SubscriptionService
 }
 
-func NewApp(c Config, l *zap.SugaredLogger) *App {
+func NewApp(c Config, l *zap.SugaredLogger) (*App, error) {
+	nbuClient := clients.NewNBUClient(l)
+	privatClient := clients.NewPrivatClient(l)
+	rateService := services.NewRate(l, []services.RateClient{nbuClient, privatClient})
+
+	adminRepository, err := repo.NewAdminRepository(c.DBUrl, l)
+	if err != nil {
+		return nil, err
+	}
+
+	emailSender, err := services.NewEmail(c.EmailAddress, c.EmailPass, l)
+	if err != nil {
+		return nil, err
+	}
+
+	subscriptionService := services.NewSubscriptionService(l, adminRepository, emailSender, rateService)
+	ratesHandler := handlers.NewRateHandler(l, rateService)
+	subscriptionHandler := handlers.NewSubscribeHandler(l, adminRepository)
+
 	return &App{
 		cfg: c,
 		l:   l,
-	}
-}
-
-func (app *App) initCron(ctx context.Context, subscriptionService services.SubscriptionService) gocron.Scheduler {
-	s, _ := gocron.NewScheduler()
-	
-	_, _ = s.NewJob(
-		gocron.CronJob(
-			"0 2 * * *",
-			false,
-		),
-		gocron.NewTask(
-			subscriptionService.NotifySubscribers, ctx,
-		),
-	)
-	
-	return s;
-}
-
-func (app *App) startCron(ctx context.Context, subscriptionService services.SubscriptionService) (gocron.Scheduler) {
-    s := app.initCron(ctx, subscriptionService)
-    s.Start()
-	app.l.Info("Cron start")
-
-    return s
+		subscriptionHandler: subscriptionHandler,
+		ratesHandler: ratesHandler,
+		subscriptionService: subscriptionService,
+	}, nil
 }
 
 func (app *App) Run(ctx context.Context) error {
-	nbuClient := clients.NewNBUClient(app.l)
-	privatClient := clients.NewPrivatClient(app.l)
-	rateService := services.NewRate(app.l, []services.RateClient{nbuClient, privatClient})
+	cron := scheduler.NewCron(app.l, ctx, app.subscriptionService)
 
-	adminRepository, err := repo.NewAdminRepository(app.cfg.DBUrl, app.l)
-	if err != nil {
-		return err
-	}
-
-	emailSender, err := services.NewEmail(app.cfg.EmailAddress, app.cfg.EmailPass, app.l)
-	if err != nil {
-		return err
-	}
-
-	subscriptionService := services.NewSubscriptionService(app.l, adminRepository, emailSender, rateService)
-	ratesHandler := handlers.NewRateHandler(app.l, rateService)
-	subscriptionHandler := handlers.NewSubscribeHandler(app.l, adminRepository)
-
-	s := app.startCron(ctx, subscriptionService)
+	s := cron.StartCron()
 
 	defer func() { _ = s.Shutdown() }()
 
-	r := routers.NewRouter(app.l, ratesHandler, subscriptionHandler)
+	r := routers.NewRouter(app.l, app.ratesHandler, app.subscriptionHandler)
 
 	app.l.Info("app run")
 	

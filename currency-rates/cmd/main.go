@@ -27,7 +27,11 @@ func main() {
 
 	ctx := context.Background()
 
-	application := app.NewApp(cfg, logger)
+	application, err := app.NewApp(cfg, logger)
+	if err != nil {
+		logger.Error(err)
+	}
+
 	if err := application.Run(ctx); err != nil {
 		logger.Error(err)
 	}

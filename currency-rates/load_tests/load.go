@@ -8,9 +8,11 @@ import (
 	vegeta "github.com/tsenart/vegeta/lib"
 )
 
+const duration = 10 * time.Second
+const freq = 50
+
 func main() {
-    rate := vegeta.Rate{Freq: 50, Per: time.Second} 
-    duration := 10 * time.Second
+    rate := vegeta.Rate{Freq: freq, Per: time.Second} 
 
     targeter := vegeta.NewStaticTargeter(vegeta.Target{
         Method: "POST",
@@ -38,6 +40,7 @@ func main() {
             panic(err)
         }
     }
+    
     metrics.Close()
 
     fmt.Printf("99th percentile: %s\n", metrics.Latencies.P99)

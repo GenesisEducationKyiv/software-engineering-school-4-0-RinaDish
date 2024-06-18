@@ -7,8 +7,8 @@ import (
 	"github.com/RinaDish/currency-rates/internal/clients"
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/RinaDish/currency-rates/internal/repo"
+	"github.com/RinaDish/currency-rates/internal/routers"
 	"github.com/RinaDish/currency-rates/internal/services"
-	"github.com/go-chi/chi/v5"
 	"github.com/go-co-op/gocron/v2"
 	"go.uber.org/zap"
 )
@@ -41,6 +41,14 @@ func (app *App) initCron(ctx context.Context, subscriptionService services.Subsc
 	return s;
 }
 
+func (app *App) startCron(ctx context.Context, subscriptionService services.SubscriptionService) (gocron.Scheduler) {
+    s := app.initCron(ctx, subscriptionService)
+    s.Start()
+	app.l.Info("Cron start")
+
+    return s
+}
+
 func (app *App) Run(ctx context.Context) error {
 	nbuClient := clients.NewNBUClient(app.l)
 	privatClient := clients.NewPrivatClient(app.l)
@@ -60,15 +68,13 @@ func (app *App) Run(ctx context.Context) error {
 	ratesHandler := handlers.NewRateHandler(app.l, rateService)
 	subscriptionHandler := handlers.NewSubscribeHandler(app.l, adminRepository)
 
-	s := app.initCron(ctx, subscriptionService)
-	defer func() { _ = s.Shutdown() }()
-	s.Start()
+	s := app.startCron(ctx, subscriptionService)
 
-	r := chi.NewRouter()
-	r.Get("/rate", ratesHandler.GetCurrentRate)
-	r.Post("/subscribe", subscriptionHandler.CreateSubscription)
+	defer func() { _ = s.Shutdown() }()
+
+	r := routers.NewRouter(app.l, ratesHandler, subscriptionHandler)
 
 	app.l.Info("app run")
 	
-	return http.ListenAndServe(app.cfg.Address, r)
+	return http.ListenAndServe(app.cfg.Address, r.GetRouter())
 }

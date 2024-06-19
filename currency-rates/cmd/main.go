@@ -27,12 +27,12 @@ func main() {
 
 	ctx := context.Background()
 
-	application, err := app.NewApp(cfg, logger)
+	application, err := app.NewApp(cfg, logger, ctx)
 	if err != nil {
 		logger.Error(err)
 	}
 
-	if err := application.Run(ctx); err != nil {
+	if err := application.Run(); err != nil {
 		logger.Error(err)
 	}
 }

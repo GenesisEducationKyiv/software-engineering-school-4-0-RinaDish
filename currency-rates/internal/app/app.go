@@ -8,8 +8,9 @@ import (
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/RinaDish/currency-rates/internal/repo"
 	"github.com/RinaDish/currency-rates/internal/routers"
-	"github.com/RinaDish/currency-rates/internal/services"
 	"github.com/RinaDish/currency-rates/internal/scheduler"
+	"github.com/RinaDish/currency-rates/internal/services"
+	"github.com/go-co-op/gocron/v2"
 	"go.uber.org/zap"
 )
 
@@ -19,9 +20,10 @@ type App struct {
 	subscriptionHandler handlers.SubscribeHandler
 	ratesHandler handlers.RateHandler
 	subscriptionService services.SubscriptionService
+	subscriptionCron gocron.Scheduler
 }
 
-func NewApp(c Config, l *zap.SugaredLogger) (*App, error) {
+func NewApp(c Config, l *zap.SugaredLogger, ctx context.Context) (*App, error) {
 	nbuClient := clients.NewNBUClient(l)
 	privatClient := clients.NewPrivatClient(l)
 	rateService := services.NewRate(l, []services.RateClient{nbuClient, privatClient})
@@ -40,21 +42,22 @@ func NewApp(c Config, l *zap.SugaredLogger) (*App, error) {
 	ratesHandler := handlers.NewRateHandler(l, rateService)
 	subscriptionHandler := handlers.NewSubscribeHandler(l, adminRepository)
 
+	cron := scheduler.NewCron(l, ctx, subscriptionService)
+
+	subscriptionCron := cron.StartCron()
+
 	return &App{
 		cfg: c,
 		l:   l,
 		subscriptionHandler: subscriptionHandler,
 		ratesHandler: ratesHandler,
 		subscriptionService: subscriptionService,
+		subscriptionCron: subscriptionCron,
 	}, nil
 }
 
-func (app *App) Run(ctx context.Context) error {
-	cron := scheduler.NewCron(app.l, ctx, app.subscriptionService)
-
-	s := cron.StartCron()
-
-	defer func() { _ = s.Shutdown() }()
+func (app *App) Run() error {
+	defer func() { _ = app.subscriptionCron.Shutdown() }()
 
 	r := routers.NewRouter(app.l, app.ratesHandler, app.subscriptionHandler)
 

@@ -39,6 +39,8 @@ func (h SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *http.Requ
 
 	if !isValidEmail(email) {
 		http.Error(w, "Invalid email", http.StatusConflict)
+		h.l.Info("Invalid email")
+		
 		return
 	}
 	

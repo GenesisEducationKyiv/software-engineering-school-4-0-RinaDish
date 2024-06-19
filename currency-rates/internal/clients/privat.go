@@ -37,13 +37,11 @@ func (privatClient PrivatClient) GetDollarRate(ctx context.Context) (float64, er
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
   if err != nil {
-    privatClient.logger.Info(err)
     return 0.0, err
   }
   
   res, err := privatClient.client.Do(req)
   if err != nil {
-    privatClient.logger.Info(err)
     return 0.0, err
   }
 
@@ -51,14 +49,12 @@ func (privatClient PrivatClient) GetDollarRate(ctx context.Context) (float64, er
 
   body, err := io.ReadAll(res.Body)
   if err != nil {
-    privatClient.logger.Info(err)
     return 0.0, err
   }
 
   var ans []PrivatRate
   err = json.Unmarshal(body, &ans)
   if err != nil {
-    privatClient.logger.Info(err)
 	  return 0.0, err
   }
 

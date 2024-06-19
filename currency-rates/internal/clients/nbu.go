@@ -34,14 +34,12 @@ func (nbuClient NBUClient) GetDollarRate(ctx context.Context) (float64, error){
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
   if err != nil {
-    nbuClient.logger.Info(err)
     return 0.0, err
   }
 
   res, err := nbuClient.client.Do(req)
 
   if err != nil {
-    nbuClient.logger.Info(err)
     return 0.0, err
   }
 
@@ -50,7 +48,6 @@ func (nbuClient NBUClient) GetDollarRate(ctx context.Context) (float64, error){
   body, err := io.ReadAll(res.Body)
 
   if err != nil {
-    nbuClient.logger.Info(err)
     return 0.0, err
   }
 
@@ -58,7 +55,6 @@ func (nbuClient NBUClient) GetDollarRate(ctx context.Context) (float64, error){
   err = json.Unmarshal(body, &ans)
 
   if err != nil {
-    nbuClient.logger.Info(err)
     return 0.0, err
   }
 

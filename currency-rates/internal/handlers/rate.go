@@ -13,19 +13,19 @@ type RateClient interface {
 }
 
 type RateHandler struct {
-	l   *zap.SugaredLogger
+	logger   *zap.SugaredLogger
 	rateClient RateClient
 }
 
-func NewRateHandler(l *zap.SugaredLogger, r RateClient) RateHandler {
+func NewRateHandler(logger *zap.SugaredLogger, client RateClient) RateHandler {
 	return RateHandler{
-		l: l,
-		rateClient: r,
+		logger: logger,
+		rateClient: client,
 	}
 }
 
-func (h RateHandler) GetCurrentRate(w http.ResponseWriter, r *http.Request) {
-	rate, err := h.rateClient.GetDollarRate(context.Background())
+func (hadler RateHandler) GetCurrentRate(w http.ResponseWriter, r *http.Request) {
+	rate, err := hadler.rateClient.GetDollarRate(context.Background())
 
 	w.Header().Set("Content-Type", "application/json")
 	if err == nil { 
@@ -34,7 +34,7 @@ func (h RateHandler) GetCurrentRate(w http.ResponseWriter, r *http.Request) {
 		strRate := strconv.FormatFloat(rate, 'f', -1, 64)
 		_, err := w.Write([]byte(strRate))
 		if err != nil {
-			h.l.Error(err)
+			hadler.logger.Error(err)
 		}
 
 		return

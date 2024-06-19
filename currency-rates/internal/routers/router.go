@@ -8,14 +8,14 @@ import (
 )
 
 type Router struct {
-	l *zap.SugaredLogger
+	logger *zap.SugaredLogger
 	ratesHandler handlers.RateHandler
 	subscriptionHandler handlers.SubscribeHandler
 }
 
-func NewRouter(l *zap.SugaredLogger, ratesHandler handlers.RateHandler, subscriptionHandler handlers.SubscribeHandler) Router {
+func NewRouter(logger *zap.SugaredLogger, ratesHandler handlers.RateHandler, subscriptionHandler handlers.SubscribeHandler) Router {
 	return Router{
-		l: l,
+		logger: logger,
 		ratesHandler: ratesHandler,
 		subscriptionHandler: subscriptionHandler,
 	}

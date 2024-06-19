@@ -14,34 +14,34 @@ type NBURate struct {
 }
 
 type NBUClient struct {
-	l *zap.SugaredLogger
-	c *http.Client
+	logger *zap.SugaredLogger
+	client *http.Client
 }
 
-func NewNBUClient(l *zap.SugaredLogger) NBUClient {
+func NewNBUClient(logger *zap.SugaredLogger) NBUClient {
 	client := &http.Client {
 	}
 
 	return NBUClient{
-		l: l.With("client", "NBU"),
-		c: client,
+		logger: logger.With("client", "NBU"),
+		client: client,
 	}
 }
 
-func (n NBUClient) GetDollarRate(ctx context.Context) (float64, error){
+func (nbuClient NBUClient) GetDollarRate(ctx context.Context) (float64, error){
   url := "https://bank.gov.ua/NBUStatService/v1/statdirectory/dollar_info?json"
 
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
   if err != nil {
-    n.l.Info(err)
+    nbuClient.logger.Info(err)
     return 0.0, err
   }
 
-  res, err := n.c.Do(req)
+  res, err := nbuClient.client.Do(req)
 
   if err != nil {
-    n.l.Info(err)
+    nbuClient.logger.Info(err)
     return 0.0, err
   }
 
@@ -50,7 +50,7 @@ func (n NBUClient) GetDollarRate(ctx context.Context) (float64, error){
   body, err := io.ReadAll(res.Body)
 
   if err != nil {
-    n.l.Info(err)
+    nbuClient.logger.Info(err)
     return 0.0, err
   }
 
@@ -58,11 +58,11 @@ func (n NBUClient) GetDollarRate(ctx context.Context) (float64, error){
   err = json.Unmarshal(body, &ans)
 
   if err != nil {
-	n.l.Info(err)
-	return 0.0, err
+    nbuClient.logger.Info(err)
+    return 0.0, err
   }
 
-  n.l.Info("Rate: ", ans[0].Rate)
+  nbuClient.logger.Info("Rate: ", ans[0].Rate)
   
   return ans[0].Rate, nil
 }

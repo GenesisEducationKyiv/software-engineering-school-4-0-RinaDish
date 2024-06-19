@@ -19,35 +19,35 @@ type SubscriptionSender interface {
 type SubscriptionService struct {
 	db SubscriptionDb
 	sender SubscriptionSender
-	l *zap.SugaredLogger
-	r RateClient
+	logger *zap.SugaredLogger
+	rateClient RateClient
 }
 
-func NewSubscriptionService(l *zap.SugaredLogger, d SubscriptionDb, s SubscriptionSender, r RateClient) SubscriptionService{
+func NewSubscriptionService(logger *zap.SugaredLogger, d SubscriptionDb, s SubscriptionSender, r RateClient) SubscriptionService{
 	return SubscriptionService{
 		db: d,
 		sender: s,
-		l: l,
-		r: r,
+		logger: logger,
+		rateClient: r,
 	}
 }
 
-func (s SubscriptionService) NotifySubscribers(ctx context.Context){
-	rate, err := s.r.GetDollarRate(ctx)
+func (service SubscriptionService) NotifySubscribers(ctx context.Context){
+	rate, err := service.rateClient.GetDollarRate(ctx)
 
 	if err != nil {
-		s.l.Error(err)
+		service.logger.Error(err)
 		return
 	}
 
-	emails, err := s.db.GetEmails(ctx)
+	emails, err := service.db.GetEmails(ctx)
 
 	if err != nil {
-		s.l.Error(err)
+		service.logger.Error(err)
 		return
 	}
 
 	for _, email := range emails {
-		s.sender.Send(email.Email, fmt.Sprintf("%f", rate))
+		service.sender.Send(email.Email, fmt.Sprintf("%f", rate))
 	}
 }

@@ -15,18 +15,18 @@ type Db interface {
 }
 
 type SubscribeHandler struct {
-	l *zap.SugaredLogger
-	r Db
+	logger *zap.SugaredLogger
+	repo Db
 }
 
-func NewSubscribeHandler(l *zap.SugaredLogger, r Db) SubscribeHandler {
+func NewSubscribeHandler(logger *zap.SugaredLogger, repo Db) SubscribeHandler {
 	return SubscribeHandler{
-		l: l,
-		r: r,
+		logger: logger,
+		repo: repo,
 	}
 }
 
-func (h SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *http.Request) {
+func (handler SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Form parse error", http.StatusConflict)
@@ -39,12 +39,12 @@ func (h SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *http.Requ
 
 	if !isValidEmail(email) {
 		http.Error(w, "Invalid email", http.StatusConflict)
-		h.l.Info("Invalid email")
+		handler.logger.Info("Invalid email")
 		
 		return
 	}
 	
-	err = h.r.SetEmail(r.Context(), email)
+	err = handler.repo.SetEmail(r.Context(), email)
 	responseStatus := http.StatusOK
 	if err != nil {
 		responseStatus = http.StatusConflict

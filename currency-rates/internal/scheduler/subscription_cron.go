@@ -9,14 +9,14 @@ import (
 )
 
 type Cron struct {
-	l   *zap.SugaredLogger
-	c 	gocron.Scheduler
+	logger  *zap.SugaredLogger
+	cron  gocron.Scheduler
 }
 
-func NewCron(l *zap.SugaredLogger, ctx context.Context, subscriptionService services.SubscriptionService) Cron {
-	c, _ := gocron.NewScheduler()
+func NewCron(logger *zap.SugaredLogger, ctx context.Context, subscriptionService services.SubscriptionService) Cron {
+	cron, _ := gocron.NewScheduler()
 	
-	_, _ = c.NewJob(
+	_, _ = cron.NewJob(
 		gocron.CronJob(
 			"0 2 * * *",
 			false,
@@ -27,14 +27,14 @@ func NewCron(l *zap.SugaredLogger, ctx context.Context, subscriptionService serv
 	)
 	
 	return Cron{
-		l: l,
-		c: c,
+		logger: logger,
+		cron: cron,
 	};
 }
 
 func (cron *Cron) StartCron() (gocron.Scheduler) {
-    cron.c.Start()
-	cron.l.Info("Cron start")
+    cron.cron.Start()
+	cron.logger.Info("Cron start")
 
-    return cron.c
+    return cron.cron
 }

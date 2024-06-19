@@ -12,17 +12,17 @@ const serverName = "smtp.gmail.com"
 const serverPort = "587"
 
 type Mail struct {
-	from   string
-	pass   string
-	client *smtp.Client
-	l      *zap.SugaredLogger
+	from   	string
+	pass   	string
+	client 	*smtp.Client
+	logger  *zap.SugaredLogger
 }
 
-func NewEmail(from string, pass string, l *zap.SugaredLogger) (*Mail, error) {
+func NewEmail(from string, pass string, logger *zap.SugaredLogger) (*Mail, error) {
 	m := &Mail{
 		from: from,
 		pass: pass,
-		l:    l,
+		logger:	logger,
 	}
 
 	if err := m.initClient(); err != nil {
@@ -32,7 +32,7 @@ func NewEmail(from string, pass string, l *zap.SugaredLogger) (*Mail, error) {
 	return m, nil
 }
 
-func (m *Mail) initClient() error {
+func (mail *Mail) initClient() error {
 	client, err := smtp.Dial(serverName + ":" + serverPort)
 	if err != nil {
 		return err
@@ -44,51 +44,51 @@ func (m *Mail) initClient() error {
 		return err
 	}
 
-	auth := smtp.PlainAuth("", m.from, m.pass, serverName)
+	auth := smtp.PlainAuth("", mail.from, mail.pass, serverName)
 	if err = client.Auth(auth); err != nil {
 		return err
 	}
 
-	m.client = client
+	mail.client = client
 	
 	return nil
 }
 
-func (m *Mail) Send(to, body string) {
-	if m.client == nil {
-		m.l.Infof("SMTP client is not connected")
+func (mail *Mail) Send(to, body string) {
+	if mail.client == nil {
+		mail.logger.Infof("SMTP client is not connected")
 		return
 	}
 
-	msg := fmt.Sprintf("From: %s\nTo: %s\nSubject: Dollar Rate\n\n%s", m.from, to, body)
+	msg := fmt.Sprintf("From: %s\nTo: %s\nSubject: Dollar Rate\n\n%s", mail.from, to, body)
 
-	if err := m.client.Mail(m.from); err != nil {
-		m.l.Info(err)
+	if err := mail.client.Mail(mail.from); err != nil {
+		mail.logger.Info(err)
 		return
 	}
 
-	if err := m.client.Rcpt(to); err != nil {
-		m.l.Info(err)
+	if err := mail.client.Rcpt(to); err != nil {
+		mail.logger.Info(err)
 		return
 	}
 
-	w, err := m.client.Data()
+	w, err := mail.client.Data()
 	if err != nil {
-		m.l.Info(err)
+		mail.logger.Info(err)
 		return
 	}
 
 	_, err = w.Write([]byte(msg))
 	if err != nil {
-		m.l.Info(err)
+		mail.logger.Info(err)
 		return
 	}
 
 	err = w.Close()
 	if err != nil {
-		m.l.Info(err)
+		mail.logger.Info(err)
 		return
 	}
 
-	m.l.Infof("email sent to %s", to)
+	mail.logger.Infof("email sent to %s", to)
 }

@@ -17,33 +17,33 @@ type PrivatRate struct {
 }
 
 type PrivatClient struct {
-	l *zap.SugaredLogger
-	c *http.Client
+	logger *zap.SugaredLogger
+	client *http.Client
 }
 
-func NewPrivatClient(l *zap.SugaredLogger) PrivatClient {
+func NewPrivatClient(logger *zap.SugaredLogger) PrivatClient {
 	client := &http.Client {
 	}
 
 	return PrivatClient{
-		l: l.With("client", "PrivatBank"),
-		c: client,
+		logger: logger.With("client", "PrivatBank"),
+		client: client,
 	}
 }
 
-func (n PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
+func (privatClient PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
   url := "https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5"
 
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
   if err != nil {
-    n.l.Info(err)
+    privatClient.logger.Info(err)
     return 0.0, err
   }
   
-  res, err := n.c.Do(req)
+  res, err := privatClient.client.Do(req)
   if err != nil {
-    n.l.Info(err)
+    privatClient.logger.Info(err)
     return 0.0, err
   }
 
@@ -51,15 +51,15 @@ func (n PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
 
   body, err := io.ReadAll(res.Body)
   if err != nil {
-    n.l.Info(err)
+    privatClient.logger.Info(err)
     return 0.0, err
   }
 
   var ans []PrivatRate
   err = json.Unmarshal(body, &ans)
   if err != nil {
-	n.l.Info(err)
-	return 0.0, err
+    privatClient.logger.Info(err)
+	  return 0.0, err
   }
 
   for _, val := range ans {

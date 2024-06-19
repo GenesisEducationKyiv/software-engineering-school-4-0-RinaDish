@@ -14,14 +14,14 @@ type RateClient interface {
 }
 
 type Rate struct {
-	l *zap.SugaredLogger
+	logger *zap.SugaredLogger
 	rateClients []RateClient
 }
 
-func NewRate(l *zap.SugaredLogger, r []RateClient) Rate {
+func NewRate(logger *zap.SugaredLogger, rateClients []RateClient) Rate {
 	return Rate{
-		l: l,
-		rateClients: r,
+		logger: logger,
+		rateClients: rateClients,
 	}
 }
 

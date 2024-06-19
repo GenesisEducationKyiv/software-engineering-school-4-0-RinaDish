@@ -11,11 +11,11 @@ type Repository struct {
 	logger *zap.SugaredLogger
 }
 
-func NewAdminRepository(url string, l *zap.SugaredLogger) (*Repository, error) {
+func NewAdminRepository(url string, logger *zap.SugaredLogger) (*Repository, error) {
 	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
 	
 	return &Repository{
 		DB:     db,
-		logger: l.With("service", "repository"),
+		logger: logger.With("service", "repository"),
 	}, err
 }

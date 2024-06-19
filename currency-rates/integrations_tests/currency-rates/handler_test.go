@@ -53,8 +53,8 @@ func sendMail(email string, db *gorm.DB) *http.Response {
 }
 
 func TestUserHandler(main *testing.T) {
-	main.Run("succesfully create subsctiption", func(t *testing.T) {
-		testdb.Reset(t, testdb.GetTemplateDBDSN(), testdb.DBName, testdb.TemplateDBName)
+	main.Run("successful create subsctiption", func(t *testing.T) {
+		testdb.ResetDBTemplate(t, testdb.GetTemplateDBDSN(), testdb.DBName, testdb.TemplateDBName)
 
 		db, err := gorm.Open(postgres.Open(testdb.GetDBDSN()), &gorm.Config{})
 		if err != nil {
@@ -78,8 +78,8 @@ func TestUserHandler(main *testing.T) {
 		defer require.Equal(t, rowEmail, email)
 	})
 
-	main.Run("failure duplicate email", func(t *testing.T) {
-		testdb.Reset(t, testdb.GetTemplateDBDSN(), testdb.DBName, testdb.TemplateDBName)
+	main.Run("failure: duplicate email", func(t *testing.T) {
+		testdb.ResetDBTemplate(t, testdb.GetTemplateDBDSN(), testdb.DBName, testdb.TemplateDBName)
 
 		db, err := gorm.Open(postgres.Open(testdb.GetDBDSN()), &gorm.Config{})
 		if err != nil {

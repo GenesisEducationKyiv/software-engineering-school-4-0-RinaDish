@@ -37,7 +37,7 @@ func GetEmail(t *testing.T, dsn, dbName, email string) string {
 	return res
 }
 
-func Reset(t *testing.T, dsn, dbName, tplDBName string) {
+func ResetDBTemplate(t *testing.T, dsn, dbName, tplDBName string) {
 	db, err := sql.Open("postgres", dsn)
 	require.NoError(t, err)
 	defer db.Close()

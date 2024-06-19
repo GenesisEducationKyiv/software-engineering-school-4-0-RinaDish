@@ -31,7 +31,7 @@ func (d failDb) SetEmail(ctx context.Context, email string) error {
 func TestCreateSubscription(main *testing.T) {
 	l := zap.NewNop()
 
-	main.Run("succesfully", func(t *testing.T) {
+	main.Run("successful: create subscription", func(t *testing.T) {
 		d := successDb{}
 		h := handlers.NewSubscribeHandler(l.Sugar(), d)
 
@@ -54,7 +54,7 @@ func TestCreateSubscription(main *testing.T) {
 
 		require.Equal(t, w.Result().StatusCode, http.StatusOK)
 	})
-	main.Run("failure invalid email", func(t *testing.T) {
+	main.Run("failure: invalid email", func(t *testing.T) {
 		d := successDb{}
 		h := handlers.NewSubscribeHandler(l.Sugar(), d)
 
@@ -77,7 +77,7 @@ func TestCreateSubscription(main *testing.T) {
 
 		require.Equal(t, w.Result().StatusCode, http.StatusConflict)
 	})
-	main.Run("failure db set email", func(t *testing.T) {
+	main.Run("failure: db set email", func(t *testing.T) {
 		d := failDb{}
 		h := handlers.NewSubscribeHandler(l.Sugar(), d)
 

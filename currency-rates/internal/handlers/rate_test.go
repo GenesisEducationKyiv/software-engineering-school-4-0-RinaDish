@@ -29,7 +29,7 @@ func (c failedRateClient) GetDollarRate(ctx context.Context) (float64, error) {
 func TestGetCurrentRate(main *testing.T) {
 	l := zap.NewNop()
 	
-	main.Run("succesfully returned rates", func(t *testing.T) {
+	main.Run("successful: returned rates", func(t *testing.T) {
 		expectedRate := float64(10.0)
 		s := successRateClient{}
 		h := handlers.NewRateHandler(l.Sugar(), s)
@@ -51,7 +51,7 @@ func TestGetCurrentRate(main *testing.T) {
 		require.Equal(t, w.Result().StatusCode, http.StatusOK)
 	})
 
-	main.Run("failed returned rates", func(t *testing.T) {
+	main.Run("failure: returned rates", func(t *testing.T) {
 		f := failedRateClient{}
 		h := handlers.NewRateHandler(l.Sugar(), f)
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"go.uber.org/zap"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 type RateClient interface {
@@ -13,11 +13,11 @@ type RateClient interface {
 }
 
 type RateHandler struct {
-	logger   *zap.SugaredLogger
+	logger   logger.Logger
 	rateClient RateClient
 }
 
-func NewRateHandler(logger *zap.SugaredLogger, client RateClient) RateHandler {
+func NewRateHandler(logger logger.Logger, client RateClient) RateHandler {
 	return RateHandler{
 		logger: logger,
 		rateClient: client,

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"go.uber.org/zap"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 const apiCallTimeout = 500 * time.Millisecond;
@@ -14,11 +14,11 @@ type RateClient interface {
 }
 
 type Rate struct {
-	logger *zap.SugaredLogger
+	logger logger.Logger
 	rateClients []RateClient
 }
 
-func NewRate(logger *zap.SugaredLogger, rateClients []RateClient) Rate {
+func NewRate(logger logger.Logger, rateClients []RateClient) Rate {
 	return Rate{
 		logger: logger,
 		rateClients: rateClients,

@@ -10,9 +10,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+	
+	"github.com/RinaDish/currency-rates/internal/handlers"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 type successDb struct{}
@@ -20,7 +22,6 @@ type successDb struct{}
 func (d successDb) SetEmail(ctx context.Context, email string) error {
 	return nil
 }
-
 
 type failDb struct{}
 
@@ -33,7 +34,11 @@ func TestCreateSubscription(main *testing.T) {
 
 	main.Run("succesfully", func(t *testing.T) {
 		d := successDb{}
-		h := handlers.NewSubscribeHandler(l.Sugar(), d)
+
+		sugaredLogger := l.Sugar()
+		appLogger := logger.NewZapLogger(sugaredLogger)
+
+		h := handlers.NewSubscribeHandler(appLogger, d)
 
 		form := url.Values{}
 		form.Add("email", "test@test.com")
@@ -56,7 +61,11 @@ func TestCreateSubscription(main *testing.T) {
 	})
 	main.Run("failure invalid email", func(t *testing.T) {
 		d := successDb{}
-		h := handlers.NewSubscribeHandler(l.Sugar(), d)
+
+		sugaredLogger := l.Sugar()
+		appLogger := logger.NewZapLogger(sugaredLogger)
+
+		h := handlers.NewSubscribeHandler(appLogger, d)
 
 		form := url.Values{}
 		form.Add("email", "test")
@@ -79,7 +88,11 @@ func TestCreateSubscription(main *testing.T) {
 	})
 	main.Run("failure db set email", func(t *testing.T) {
 		d := failDb{}
-		h := handlers.NewSubscribeHandler(l.Sugar(), d)
+
+		sugaredLogger := l.Sugar()
+		appLogger := logger.NewZapLogger(sugaredLogger)
+
+		h := handlers.NewSubscribeHandler(appLogger, d)
 
 		form := url.Values{}
 		form.Add("email", "test@gmail.com")

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"go.uber.org/zap"
+  "github.com/RinaDish/currency-rates/tools"
 )
 
 type PrivatRate struct {
@@ -17,11 +17,11 @@ type PrivatRate struct {
 }
 
 type PrivatClient struct {
-	logger *zap.SugaredLogger
+	logger logger.Logger
 	client *http.Client
 }
 
-func NewPrivatClient(logger *zap.SugaredLogger) PrivatClient {
+func NewPrivatClient(logger logger.Logger) PrivatClient {
 	client := &http.Client {
 	}
 

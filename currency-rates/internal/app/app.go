@@ -10,20 +10,20 @@ import (
 	"github.com/RinaDish/currency-rates/internal/routers"
 	"github.com/RinaDish/currency-rates/internal/scheduler"
 	"github.com/RinaDish/currency-rates/internal/services"
+	"github.com/RinaDish/currency-rates/tools"
 	"github.com/go-co-op/gocron/v2"
-	"go.uber.org/zap"
 )
 
 type App struct {
 	cfg Config
-	logger   *zap.SugaredLogger
+	logger   logger.Logger
 	subscriptionHandler handlers.SubscribeHandler
 	ratesHandler handlers.RateHandler
 	subscriptionService services.SubscriptionService
 	subscriptionCron gocron.Scheduler
 }
 
-func NewApp(c Config, logger *zap.SugaredLogger, ctx context.Context) (*App, error) {
+func NewApp(c Config, logger logger.Logger, ctx context.Context) (*App, error) {
 	nbuClient := clients.NewNBUClient(logger)
 	privatClient := clients.NewPrivatClient(logger)
 	rateService := services.NewRate(logger, []services.RateClient{nbuClient, privatClient})

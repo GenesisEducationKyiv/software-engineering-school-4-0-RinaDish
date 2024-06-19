@@ -9,9 +9,11 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+
+	"github.com/RinaDish/currency-rates/internal/handlers"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 type successRateClient struct{}
@@ -32,7 +34,11 @@ func TestGetCurrentRate(main *testing.T) {
 	main.Run("succesfully returned rates", func(t *testing.T) {
 		expectedRate := float64(10.0)
 		s := successRateClient{}
-		h := handlers.NewRateHandler(l.Sugar(), s)
+
+		sugaredLogger := l.Sugar()
+		appLogger := logger.NewZapLogger(sugaredLogger)
+
+		h := handlers.NewRateHandler(appLogger, s)
 
 		req := httptest.NewRequest(http.MethodGet, "/rates", nil)
 		w := httptest.NewRecorder()
@@ -53,7 +59,11 @@ func TestGetCurrentRate(main *testing.T) {
 
 	main.Run("failed returned rates", func(t *testing.T) {
 		f := failedRateClient{}
-		h := handlers.NewRateHandler(l.Sugar(), f)
+
+		sugaredLogger := l.Sugar()
+		appLogger := logger.NewZapLogger(sugaredLogger)
+		
+		h := handlers.NewRateHandler(appLogger, f)
 
 		req := httptest.NewRequest(http.MethodGet, "/rates", nil)
 		w := httptest.NewRecorder()

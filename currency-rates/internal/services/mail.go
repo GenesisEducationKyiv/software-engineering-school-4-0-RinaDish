@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/smtp"
 
-	"go.uber.org/zap"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 const serverName = "smtp.gmail.com"
@@ -15,10 +15,10 @@ type Mail struct {
 	from   	string
 	pass   	string
 	client 	*smtp.Client
-	logger  *zap.SugaredLogger
+	logger  logger.Logger
 }
 
-func NewEmail(from string, pass string, logger *zap.SugaredLogger) (*Mail, error) {
+func NewEmail(from string, pass string, logger logger.Logger) (*Mail, error) {
 	m := &Mail{
 		from: from,
 		pass: pass,

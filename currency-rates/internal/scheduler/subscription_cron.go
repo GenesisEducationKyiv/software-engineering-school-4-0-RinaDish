@@ -5,15 +5,15 @@ import (
 
 	"github.com/RinaDish/currency-rates/internal/services"
 	"github.com/go-co-op/gocron/v2"
-	"go.uber.org/zap"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 type Cron struct {
-	logger  *zap.SugaredLogger
+	logger  logger.Logger
 	cron  gocron.Scheduler
 }
 
-func NewCron(logger *zap.SugaredLogger, ctx context.Context, subscriptionService services.SubscriptionService) Cron {
+func NewCron(logger logger.Logger, ctx context.Context, subscriptionService services.SubscriptionService) Cron {
 	cron, _ := gocron.NewScheduler()
 	
 	_, _ = cron.NewJob(

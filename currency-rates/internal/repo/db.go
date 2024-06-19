@@ -1,17 +1,18 @@
 package repo
 
 import (
-	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 type Repository struct {
 	DB     *gorm.DB
-	logger *zap.SugaredLogger
+	logger logger.Logger
 }
 
-func NewAdminRepository(url string, logger *zap.SugaredLogger) (*Repository, error) {
+func NewAdminRepository(url string, logger logger.Logger) (*Repository, error) {
 	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
 	
 	return &Repository{

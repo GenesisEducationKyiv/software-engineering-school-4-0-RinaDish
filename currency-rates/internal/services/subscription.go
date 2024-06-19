@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/RinaDish/currency-rates/internal/repo"
-	"go.uber.org/zap"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 type SubscriptionDb interface {
@@ -19,11 +19,11 @@ type SubscriptionSender interface {
 type SubscriptionService struct {
 	db SubscriptionDb
 	sender SubscriptionSender
-	logger *zap.SugaredLogger
+	logger logger.Logger
 	rateClient RateClient
 }
 
-func NewSubscriptionService(logger *zap.SugaredLogger, d SubscriptionDb, s SubscriptionSender, r RateClient) SubscriptionService{
+func NewSubscriptionService(logger logger.Logger, d SubscriptionDb, s SubscriptionSender, r RateClient) SubscriptionService{
 	return SubscriptionService{
 		db: d,
 		sender: s,

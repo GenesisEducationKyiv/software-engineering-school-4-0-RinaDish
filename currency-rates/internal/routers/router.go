@@ -1,19 +1,19 @@
 package routers
 
 import (
-	"go.uber.org/zap"
+	"github.com/RinaDish/currency-rates/tools"
 	"github.com/go-chi/chi/v5"
 
 	"github.com/RinaDish/currency-rates/internal/handlers"
 )
 
 type Router struct {
-	logger *zap.SugaredLogger
+	logger logger.Logger
 	ratesHandler handlers.RateHandler
 	subscriptionHandler handlers.SubscribeHandler
 }
 
-func NewRouter(logger *zap.SugaredLogger, ratesHandler handlers.RateHandler, subscriptionHandler handlers.SubscribeHandler) Router {
+func NewRouter(logger logger.Logger, ratesHandler handlers.RateHandler, subscriptionHandler handlers.SubscribeHandler) Router {
 	return Router{
 		logger: logger,
 		ratesHandler: ratesHandler,

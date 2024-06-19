@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"go.uber.org/zap"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
@@ -15,11 +15,11 @@ type Db interface {
 }
 
 type SubscribeHandler struct {
-	logger *zap.SugaredLogger
+	logger logger.Logger
 	repo Db
 }
 
-func NewSubscribeHandler(logger *zap.SugaredLogger, repo Db) SubscribeHandler {
+func NewSubscribeHandler(logger logger.Logger, repo Db) SubscribeHandler {
 	return SubscribeHandler{
 		logger: logger,
 		repo: repo,

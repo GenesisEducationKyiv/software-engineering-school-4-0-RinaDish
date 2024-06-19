@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"go.uber.org/zap"
+  "github.com/RinaDish/currency-rates/tools"
 )
 
 type NBURate struct {
@@ -14,11 +14,11 @@ type NBURate struct {
 }
 
 type NBUClient struct {
-	logger *zap.SugaredLogger
+	logger logger.Logger
 	client *http.Client
 }
 
-func NewNBUClient(logger *zap.SugaredLogger) NBUClient {
+func NewNBUClient(logger logger.Logger) NBUClient {
 	client := &http.Client {
 	}
 

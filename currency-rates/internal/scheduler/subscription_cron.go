@@ -1,40 +1,37 @@
 package scheduler
 
 import (
-	"context"
-
-	"github.com/RinaDish/currency-rates/internal/services"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/RinaDish/currency-rates/tools"
 )
 
 type Cron struct {
 	logger  tools.Logger
-	cron  gocron.Scheduler
+	scheduler  gocron.Scheduler
 }
 
-func NewCron(logger tools.Logger, ctx context.Context, subscriptionService services.SubscriptionService) Cron {
-	cron, _ := gocron.NewScheduler()
-	
-	_, _ = cron.NewJob(
-		gocron.CronJob(
-			"0 2 * * *",
-			false,
-		),
-		gocron.NewTask(
-			subscriptionService.NotifySubscribers, ctx,
-		),
-	)
+func NewCron(logger tools.Logger) Cron {
+	scheduler, _ := gocron.NewScheduler()
 	
 	return Cron{
 		logger: logger,
-		cron: cron,
+		scheduler: scheduler,
 	};
 }
 
+func (cron *Cron) RegisterTask(schedule string, task gocron.Task) {
+	_, _ = cron.scheduler.NewJob(
+		gocron.CronJob(
+			schedule,
+			false,
+		),
+		task,
+	)
+}
+
 func (cron *Cron) StartCron() (gocron.Scheduler) {
-    cron.cron.Start()
+    cron.scheduler.Start()
 	cron.logger.Info("Cron start")
 
-    return cron.cron
+    return cron.scheduler
 }

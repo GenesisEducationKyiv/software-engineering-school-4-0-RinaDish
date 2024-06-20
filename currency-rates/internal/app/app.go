@@ -11,6 +11,7 @@ import (
 	"github.com/RinaDish/currency-rates/internal/scheduler"
 	"github.com/RinaDish/currency-rates/internal/services"
 	"github.com/RinaDish/currency-rates/tools"
+	"github.com/go-co-op/gocron/v2"
 )
 
 type App struct {
@@ -42,7 +43,10 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	ratesHandler := handlers.NewRateHandler(logger, rateService)
 	subscriptionHandler := handlers.NewSubscribeHandler(logger, adminRepository)
 
-	cron := scheduler.NewCron(logger, ctx, subscriptionService)
+	cron := scheduler.NewCron(logger)
+	task := gocron.NewTask(subscriptionService.NotifySubscribers, ctx)
+	
+	cron.RegisterTask("0 2 * * *", task)
 
 	router := routers.NewRouter(logger, ratesHandler, subscriptionHandler)
 

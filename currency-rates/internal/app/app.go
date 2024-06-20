@@ -11,7 +11,6 @@ import (
 	"github.com/RinaDish/currency-rates/internal/scheduler"
 	"github.com/RinaDish/currency-rates/internal/services"
 	"github.com/RinaDish/currency-rates/tools"
-	"github.com/go-co-op/gocron/v2"
 )
 
 type App struct {
@@ -20,7 +19,8 @@ type App struct {
 	subscriptionHandler handlers.SubscribeHandler
 	ratesHandler handlers.RateHandler
 	subscriptionService services.SubscriptionService
-	subscriptionCron gocron.Scheduler
+	subscriptionCron  scheduler.Cron
+	router routers.Router
 }
 
 func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
@@ -44,7 +44,7 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 
 	cron := scheduler.NewCron(logger, ctx, subscriptionService)
 
-	subscriptionCron := cron.StartCron()
+	router := routers.NewRouter(logger, ratesHandler, subscriptionHandler)
 
 	return &App{
 		cfg: c,
@@ -52,16 +52,17 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 		subscriptionHandler: subscriptionHandler,
 		ratesHandler: ratesHandler,
 		subscriptionService: subscriptionService,
-		subscriptionCron: subscriptionCron,
+		subscriptionCron: cron,
+		router: router,
 	}, nil
 }
 
 func (app *App) Run() error {
-	defer func() { _ = app.subscriptionCron.Shutdown() }()
+	subscriptionCron := app.subscriptionCron.StartCron()
 
-	r := routers.NewRouter(app.logger, app.ratesHandler, app.subscriptionHandler)
+	defer func() { _ = subscriptionCron.Shutdown() }()
 
 	app.logger.Info("app run")
 	
-	return http.ListenAndServe(app.cfg.Address, r.GetRouter())
+	return http.ListenAndServe(app.cfg.Address, app.router.GetRouter())
 }

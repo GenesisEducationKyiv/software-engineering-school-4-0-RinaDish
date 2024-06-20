@@ -32,7 +32,7 @@ func main() {
 
 	application, err := app.NewApp(cfg, appLogger, ctx)
 	if err != nil {
-		appLogger.Error(err)
+		appLogger.Panic("Critical error", err)
 	}
 
 	if err := application.Run(); err != nil {

@@ -9,6 +9,8 @@ type Logger interface {
     Infof(template string, args ...interface{})
     Error(args ...interface{})
     Errorf(template string, args ...interface{})
+	Panic(args ...interface{})
+    Panicf(template string, args ...interface{}) 
     With(args ...interface{}) Logger
 
 }
@@ -35,6 +37,14 @@ func (l ZapLogger) Error(args ...interface{}) {
 
 func (l ZapLogger) Errorf(template string, args ...interface{}) {
     l.logger.Errorf(template, args...)
+}
+
+func (l ZapLogger) Panic(args ...interface{}) {
+    l.logger.Panic(args...)
+}
+
+func (l ZapLogger) Panicf(template string, args ...interface{}) {
+    l.logger.Panicf(template, args...)
 }
 
 func (l ZapLogger) With(args ...interface{}) Logger {

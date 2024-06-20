@@ -36,7 +36,7 @@ func TestCreateSubscription(main *testing.T) {
 		d := successDb{}
 
 		sugaredLogger := l.Sugar()
-		appLogger := logger.NewZapLogger(sugaredLogger)
+		appLogger := tools.NewZapLogger(sugaredLogger)
 
 		h := handlers.NewSubscribeHandler(appLogger, d)
 
@@ -63,7 +63,7 @@ func TestCreateSubscription(main *testing.T) {
 		d := successDb{}
 
 		sugaredLogger := l.Sugar()
-		appLogger := logger.NewZapLogger(sugaredLogger)
+		appLogger := tools.NewZapLogger(sugaredLogger)
 
 		h := handlers.NewSubscribeHandler(appLogger, d)
 
@@ -90,7 +90,7 @@ func TestCreateSubscription(main *testing.T) {
 		d := failDb{}
 
 		sugaredLogger := l.Sugar()
-		appLogger := logger.NewZapLogger(sugaredLogger)
+		appLogger := tools.NewZapLogger(sugaredLogger)
 
 		h := handlers.NewSubscribeHandler(appLogger, d)
 

@@ -14,11 +14,11 @@ type NBURate struct {
 }
 
 type NBUClient struct {
-	logger logger.Logger
+	logger tools.Logger
 	client *http.Client
 }
 
-func NewNBUClient(logger logger.Logger) NBUClient {
+func NewNBUClient(logger tools.Logger) NBUClient {
 	client := &http.Client {
 	}
 

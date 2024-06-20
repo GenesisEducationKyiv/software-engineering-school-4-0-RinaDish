@@ -19,11 +19,11 @@ type SubscriptionSender interface {
 type SubscriptionService struct {
 	db SubscriptionDb
 	sender SubscriptionSender
-	logger logger.Logger
+	logger tools.Logger
 	rateClient RateClient
 }
 
-func NewSubscriptionService(logger logger.Logger, d SubscriptionDb, s SubscriptionSender, r RateClient) SubscriptionService{
+func NewSubscriptionService(logger tools.Logger, d SubscriptionDb, s SubscriptionSender, r RateClient) SubscriptionService{
 	return SubscriptionService{
 		db: d,
 		sender: s,

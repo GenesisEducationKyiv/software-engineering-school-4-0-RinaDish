@@ -9,11 +9,11 @@ import (
 )
 
 type Cron struct {
-	logger  logger.Logger
+	logger  tools.Logger
 	cron  gocron.Scheduler
 }
 
-func NewCron(logger logger.Logger, ctx context.Context, subscriptionService services.SubscriptionService) Cron {
+func NewCron(logger tools.Logger, ctx context.Context, subscriptionService services.SubscriptionService) Cron {
 	cron, _ := gocron.NewScheduler()
 	
 	_, _ = cron.NewJob(

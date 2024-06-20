@@ -9,10 +9,10 @@ import (
 
 type Repository struct {
 	DB     *gorm.DB
-	logger logger.Logger
+	logger tools.Logger
 }
 
-func NewAdminRepository(url string, logger logger.Logger) (*Repository, error) {
+func NewAdminRepository(url string, logger tools.Logger) (*Repository, error) {
 	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
 	
 	return &Repository{

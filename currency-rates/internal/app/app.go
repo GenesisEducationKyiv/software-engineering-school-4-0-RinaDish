@@ -16,14 +16,14 @@ import (
 
 type App struct {
 	cfg Config
-	logger   logger.Logger
+	logger   tools.Logger
 	subscriptionHandler handlers.SubscribeHandler
 	ratesHandler handlers.RateHandler
 	subscriptionService services.SubscriptionService
 	subscriptionCron gocron.Scheduler
 }
 
-func NewApp(c Config, logger logger.Logger, ctx context.Context) (*App, error) {
+func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	nbuClient := clients.NewNBUClient(logger)
 	privatClient := clients.NewPrivatClient(logger)
 	rateService := services.NewRate(logger, []services.RateClient{nbuClient, privatClient})

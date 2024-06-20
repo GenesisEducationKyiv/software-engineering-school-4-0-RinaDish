@@ -14,11 +14,11 @@ type RateClient interface {
 }
 
 type Rate struct {
-	logger logger.Logger
+	logger tools.Logger
 	rateClients []RateClient
 }
 
-func NewRate(logger logger.Logger, rateClients []RateClient) Rate {
+func NewRate(logger tools.Logger, rateClients []RateClient) Rate {
 	return Rate{
 		logger: logger,
 		rateClients: rateClients,

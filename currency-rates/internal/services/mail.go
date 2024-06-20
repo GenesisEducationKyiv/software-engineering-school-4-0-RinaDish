@@ -15,10 +15,10 @@ type Mail struct {
 	from   	string
 	pass   	string
 	client 	*smtp.Client
-	logger  logger.Logger
+	logger  tools.Logger
 }
 
-func NewEmail(from string, pass string, logger logger.Logger) (*Mail, error) {
+func NewEmail(from string, pass string, logger tools.Logger) (*Mail, error) {
 	m := &Mail{
 		from: from,
 		pass: pass,

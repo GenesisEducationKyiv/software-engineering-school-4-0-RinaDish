@@ -8,12 +8,12 @@ import (
 )
 
 type Router struct {
-	logger logger.Logger
+	logger tools.Logger
 	ratesHandler handlers.RateHandler
 	subscriptionHandler handlers.SubscribeHandler
 }
 
-func NewRouter(logger logger.Logger, ratesHandler handlers.RateHandler, subscriptionHandler handlers.SubscribeHandler) Router {
+func NewRouter(logger tools.Logger, ratesHandler handlers.RateHandler, subscriptionHandler handlers.SubscribeHandler) Router {
 	return Router{
 		logger: logger,
 		ratesHandler: ratesHandler,

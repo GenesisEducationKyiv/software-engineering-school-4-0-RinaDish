@@ -17,11 +17,11 @@ type PrivatRate struct {
 }
 
 type PrivatClient struct {
-	logger logger.Logger
+	logger tools.Logger
 	client *http.Client
 }
 
-func NewPrivatClient(logger logger.Logger) PrivatClient {
+func NewPrivatClient(logger tools.Logger) PrivatClient {
 	client := &http.Client {
 	}
 

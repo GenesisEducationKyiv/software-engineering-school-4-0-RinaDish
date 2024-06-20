@@ -36,7 +36,7 @@ func TestGetCurrentRate(main *testing.T) {
 		s := successRateClient{}
 
 		sugaredLogger := l.Sugar()
-		appLogger := logger.NewZapLogger(sugaredLogger)
+		appLogger := tools.NewZapLogger(sugaredLogger)
 
 		h := handlers.NewRateHandler(appLogger, s)
 
@@ -61,7 +61,7 @@ func TestGetCurrentRate(main *testing.T) {
 		f := failedRateClient{}
 
 		sugaredLogger := l.Sugar()
-		appLogger := logger.NewZapLogger(sugaredLogger)
+		appLogger := tools.NewZapLogger(sugaredLogger)
 		
 		h := handlers.NewRateHandler(appLogger, f)
 

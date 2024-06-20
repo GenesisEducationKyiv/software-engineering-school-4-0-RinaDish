@@ -15,11 +15,11 @@ type Db interface {
 }
 
 type SubscribeHandler struct {
-	logger logger.Logger
+	logger tools.Logger
 	repo Db
 }
 
-func NewSubscribeHandler(logger logger.Logger, repo Db) SubscribeHandler {
+func NewSubscribeHandler(logger tools.Logger, repo Db) SubscribeHandler {
 	return SubscribeHandler{
 		logger: logger,
 		repo: repo,

@@ -26,7 +26,7 @@ func main() {
 	defer l.Sync() // nolint:errcheck
 	sugaredLogger := l.Sugar()
 
-	appLogger := logger.NewZapLogger(sugaredLogger)
+	appLogger := tools.NewZapLogger(sugaredLogger)
 
 	ctx := context.Background()
 

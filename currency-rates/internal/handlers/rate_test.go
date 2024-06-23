@@ -11,8 +11,14 @@ import (
 
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 )
+
+type RateHandlerTestSuite struct {
+	suite.Suite
+	logger *zap.SugaredLogger
+}
 
 type successRateClient struct{}
 
@@ -26,47 +32,51 @@ func (c failedRateClient) GetDollarRate(ctx context.Context) (float64, error) {
 	return 0.0, errors.New("banks not available")
 }
 
-func TestGetCurrentRate(main *testing.T) {
+func (t *RateHandlerTestSuite) SetupSuite() {
 	l := zap.NewNop()
-	
-	main.Run("successful: returned rates", func(t *testing.T) {
-		expectedRate := float64(10.0)
-		s := successRateClient{}
-		h := handlers.NewRateHandler(l.Sugar(), s)
+	t.logger = l.Sugar()
+}
 
-		req := httptest.NewRequest(http.MethodGet, "/rates", nil)
-		w := httptest.NewRecorder()
+func (t *RateHandlerTestSuite) TestSuccessfulGetCurrentRate() {
+	expectedRate := float64(10.0)
+	s := successRateClient{}
+	h := handlers.NewRateHandler(t.logger, s)
 
-		h.GetCurrentRate(w, req)
-		res := w.Result()
+	req := httptest.NewRequest(http.MethodGet, "/rates", nil)
+	w := httptest.NewRecorder()
 
-		defer res.Body.Close()
-		data, err := io.ReadAll(res.Body)
-		require.NoError(t, err)
+	h.GetCurrentRate(w, req)
+	res := w.Result()
 
-		rate, err := strconv.ParseFloat(string(data), 64)
-		require.NoError(t, err)
-		require.Equal(t, expectedRate, rate)
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	require.NoError(t.T(), err)
 
-		require.Equal(t, w.Result().StatusCode, http.StatusOK)
-	})
+	rate, err := strconv.ParseFloat(string(data), 64)
+	require.NoError(t.T(), err)
+	require.Equal(t.T(), expectedRate, rate)
 
-	main.Run("failure: returned rates", func(t *testing.T) {
-		f := failedRateClient{}
-		h := handlers.NewRateHandler(l.Sugar(), f)
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusOK)
+}
+func (t *RateHandlerTestSuite) TestFailureGetCurrentRate() {
+	f := failedRateClient{}
+	h := handlers.NewRateHandler(t.logger, f)
 
-		req := httptest.NewRequest(http.MethodGet, "/rates", nil)
-		w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/rates", nil)
+	w := httptest.NewRecorder()
 
-		h.GetCurrentRate(w, req)
-		res := w.Result()
+	h.GetCurrentRate(w, req)
+	res := w.Result()
 
-		defer res.Body.Close()
-		data, err := io.ReadAll(res.Body)
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
 
-		require.NoError(t, err)
-		require.Empty(t, data)
+	require.NoError(t.T(), err)
+	require.Empty(t.T(), data)
 
-		require.Equal(t, w.Result().StatusCode, http.StatusBadRequest)
-	})
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusBadRequest)
+}
+
+func TestRateHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(RateHandlerTestSuite))
 }

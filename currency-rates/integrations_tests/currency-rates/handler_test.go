@@ -18,9 +18,28 @@ import (
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/RinaDish/currency-rates/internal/repo"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 const email = "testemail@gmail.com"
+
+type UserHandlerTestSuite struct {
+	suite.Suite
+	DB *gorm.DB
+}
+
+func (suite *UserHandlerTestSuite) SetupSuite() {
+	suite.DB, _ = gorm.Open(postgres.Open(testdb.GetDBDSN()), &gorm.Config{})
+}
+
+func (suite *UserHandlerTestSuite) BeforeTest(suiteName, testName string) {
+	db, _ := suite.DB.DB()
+	db.Close()
+
+	testdb.ResetDBTemplate(suite.T(), testdb.GetTemplateDBDSN(), testdb.DBName, testdb.TemplateDBName)
+
+	suite.DB, _ = gorm.Open(postgres.Open(testdb.GetDBDSN()), &gorm.Config{})
+}
 
 func setupUserHandler(db *gorm.DB) (handlers.SubscribeHandler, *repo.Repository) {
 	logger := zap.NewNop().Sugar()
@@ -52,56 +71,29 @@ func sendMail(email string, db *gorm.DB) *http.Response {
 	return response
 }
 
-func TestUserHandler(main *testing.T) {
-	main.Run("successful create subsctiption", func(t *testing.T) {
-		testdb.ResetDBTemplate(t, testdb.GetTemplateDBDSN(), testdb.DBName, testdb.TemplateDBName)
+func (suite *UserHandlerTestSuite) TestSuccessfulCreateSubscription() {
+	response := sendMail(email, suite.DB)
 
-		db, err := gorm.Open(postgres.Open(testdb.GetDBDSN()), &gorm.Config{})
-		if err != nil {
-			t.Fatalf("failed to create admin repository: %v", err)
-		}
+	_, err := io.ReadAll(response.Body)
+	require.NoError(suite.T(), err)
+	require.Equal(suite.T(), http.StatusOK, response.StatusCode)
 
-		defer func() {
-			if db, err := db.DB(); err == nil {
-				_ = db.Close()
-			}
-		}()
+	actualEmail := testdb.GetEmail(suite.T(), testdb.GetDBDSN(), testdb.DBName, email)
+	require.Equal(suite.T(), actualEmail, email)
+}
 
-		response := sendMail(email, db)
+func (suite *UserHandlerTestSuite) TestFailureDuplicateEmail() {
+	_ = sendMail(email, suite.DB)
+	response := sendMail(email, suite.DB)
 
-		_, err = io.ReadAll(response.Body)
+	_, err := io.ReadAll(response.Body)
+	require.NoError(suite.T(), err)
+	require.Equal(suite.T(), http.StatusConflict, response.StatusCode)
 
-		require.NoError(t, err)
-		require.Equal(t, http.StatusOK, response.StatusCode)
+	actualEmail := testdb.GetEmail(suite.T(), testdb.GetDBDSN(), testdb.DBName, email)
+	require.Equal(suite.T(), actualEmail, email)
+}
 
-		rowEmail := testdb.GetEmail(t, testdb.GetDBDSN(), testdb.DBName, email)
-		defer require.Equal(t, rowEmail, email)
-	})
-
-	main.Run("failure: duplicate email", func(t *testing.T) {
-		testdb.ResetDBTemplate(t, testdb.GetTemplateDBDSN(), testdb.DBName, testdb.TemplateDBName)
-
-		db, err := gorm.Open(postgres.Open(testdb.GetDBDSN()), &gorm.Config{})
-		if err != nil {
-			t.Fatalf("failed to create admin repository: %v", err)
-		}
-
-		defer func() {
-			if db, err := db.DB(); err == nil {
-				_ = db.Close()
-			}
-		}()
-
-		_ = sendMail(email, db)
-		response := sendMail(email, db)
-
-		_, err = io.ReadAll(response.Body)
-
-		require.NoError(t, err)
-		require.Equal(t, http.StatusConflict, response.StatusCode)
-
-		rowEmail := testdb.GetEmail(t, testdb.GetDBDSN(), testdb.DBName, email)
-
-		require.Equal(t, rowEmail, email)
-	})
+func TestUserHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(UserHandlerTestSuite))
 }

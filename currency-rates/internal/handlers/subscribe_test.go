@@ -12,8 +12,14 @@ import (
 
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 )
+
+type SubscribeHandlerTestSuite struct {
+	suite.Suite
+	logger *zap.SugaredLogger
+}
 
 type successDb struct{}
 
@@ -21,83 +27,89 @@ func (d successDb) SetEmail(ctx context.Context, email string) error {
 	return nil
 }
 
-
 type failDb struct{}
 
 func (d failDb) SetEmail(ctx context.Context, email string) error {
 	return errors.New("email exist")
 }
 
-func TestCreateSubscription(main *testing.T) {
+func (t *SubscribeHandlerTestSuite) SetupSuite() {
 	l := zap.NewNop()
+	t.logger = l.Sugar()
+}
 
-	main.Run("successful: create subscription", func(t *testing.T) {
-		d := successDb{}
-		h := handlers.NewSubscribeHandler(l.Sugar(), d)
+func (t *SubscribeHandlerTestSuite)TestSuccessfulCreateSubscription() {	
+	d := successDb{}
+	h := handlers.NewSubscribeHandler(t.logger, d)
 
-		form := url.Values{}
-		form.Add("email", "test@test.com")
+	form := url.Values{}
+	form.Add("email", "test@test.com")
 
-		req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-		w := httptest.NewRecorder()
+	w := httptest.NewRecorder()
 
-		h.CreateSubscription(w, req)
-		res := w.Result()
+	h.CreateSubscription(w, req)
+	res := w.Result()
 
-		defer res.Body.Close()
-		data, err := io.ReadAll(res.Body)
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
 
-		require.NoError(t, err)
-		require.Empty(t, data)
+	require.NoError(t.T(), err)
+	require.Empty(t.T(), data)
 
-		require.Equal(t, w.Result().StatusCode, http.StatusOK)
-	})
-	main.Run("failure: invalid email", func(t *testing.T) {
-		d := successDb{}
-		h := handlers.NewSubscribeHandler(l.Sugar(), d)
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusOK)
+}
 
-		form := url.Values{}
-		form.Add("email", "test")
+func (t *SubscribeHandlerTestSuite)TestFailureInvalidEmail() {	
+	d := successDb{}
+	h := handlers.NewSubscribeHandler(t.logger, d)
 
-		req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	form := url.Values{}
+	form.Add("email", "test")
 
-		w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-		h.CreateSubscription(w, req)
-		res := w.Result()
+	w := httptest.NewRecorder()
 
-		defer res.Body.Close()
-		data, err := io.ReadAll(res.Body)
+	h.CreateSubscription(w, req)
+	res := w.Result()
 
-		require.NoError(t, err)
-		require.Equal(t, "Invalid email\n", string(data))
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
 
-		require.Equal(t, w.Result().StatusCode, http.StatusConflict)
-	})
-	main.Run("failure: db set email", func(t *testing.T) {
-		d := failDb{}
-		h := handlers.NewSubscribeHandler(l.Sugar(), d)
+	require.NoError(t.T(), err)
+	require.Equal(t.T(), "Invalid email\n", string(data))
 
-		form := url.Values{}
-		form.Add("email", "test@gmail.com")
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusConflict)
+}
 
-		req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+func (t *SubscribeHandlerTestSuite)TestFailureDbSetEmail() {	
+	d := failDb{}
+	h := handlers.NewSubscribeHandler(t.logger, d)
 
-		w := httptest.NewRecorder()
+	form := url.Values{}
+	form.Add("email", "test@gmail.com")
 
-		h.CreateSubscription(w, req)
-		res := w.Result()
-		
-		defer res.Body.Close()
-		data, err := io.ReadAll(res.Body)
+	req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-		require.NoError(t, err)
-		require.Empty(t, data)
+	w := httptest.NewRecorder()
 
-		require.Equal(t, w.Result().StatusCode, http.StatusConflict)
-	})
+	h.CreateSubscription(w, req)
+	res := w.Result()
+	
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+
+	require.NoError(t.T(), err)
+	require.Empty(t.T(), data)
+
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusConflict)
+}
+
+func TestSubscribeHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(SubscribeHandlerTestSuite))
 }

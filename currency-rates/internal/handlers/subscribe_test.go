@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -11,6 +10,9 @@ import (
 	"testing"
 
 	"github.com/RinaDish/currency-rates/internal/handlers"
+	"github.com/RinaDish/currency-rates/internal/handlers/mocks"
+
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
@@ -21,26 +23,16 @@ type SubscribeHandlerTestSuite struct {
 	logger *zap.SugaredLogger
 }
 
-type successDb struct{}
-
-func (d successDb) SetEmail(ctx context.Context, email string) error {
-	return nil
-}
-
-type failDb struct{}
-
-func (d failDb) SetEmail(ctx context.Context, email string) error {
-	return errors.New("email exist")
-}
-
 func (t *SubscribeHandlerTestSuite) SetupSuite() {
 	l := zap.NewNop()
 	t.logger = l.Sugar()
 }
 
 func (t *SubscribeHandlerTestSuite)TestSuccessfulCreateSubscription() {	
-	d := successDb{}
-	h := handlers.NewSubscribeHandler(t.logger, d)
+	mockDB := mocks.NewDb(t.T())
+	mockDB.On("SetEmail", mock.Anything, "test@test.com").Return(nil)
+
+	h := handlers.NewSubscribeHandler(t.logger, mockDB)
 
 	form := url.Values{}
 	form.Add("email", "test@test.com")
@@ -63,8 +55,9 @@ func (t *SubscribeHandlerTestSuite)TestSuccessfulCreateSubscription() {
 }
 
 func (t *SubscribeHandlerTestSuite)TestFailureInvalidEmail() {	
-	d := successDb{}
-	h := handlers.NewSubscribeHandler(t.logger, d)
+	mockDB := mocks.NewDb(t.T())
+
+	h := handlers.NewSubscribeHandler(t.logger, mockDB)
 
 	form := url.Values{}
 	form.Add("email", "test")
@@ -87,8 +80,10 @@ func (t *SubscribeHandlerTestSuite)TestFailureInvalidEmail() {
 }
 
 func (t *SubscribeHandlerTestSuite)TestFailureDbSetEmail() {	
-	d := failDb{}
-	h := handlers.NewSubscribeHandler(t.logger, d)
+	mockDB := mocks.NewDb(t.T())
+	mockDB.On("SetEmail", mock.Anything, "test@gmail.com").Return(errors.New("email exist"))
+
+	h := handlers.NewSubscribeHandler(t.logger, mockDB)
 
 	form := url.Values{}
 	form.Add("email", "test@gmail.com")

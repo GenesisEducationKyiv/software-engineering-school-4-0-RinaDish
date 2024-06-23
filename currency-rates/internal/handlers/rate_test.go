@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -10,6 +9,9 @@ import (
 	"testing"
 
 	"github.com/RinaDish/currency-rates/internal/handlers"
+	"github.com/RinaDish/currency-rates/internal/handlers/mocks"
+
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
@@ -20,18 +22,6 @@ type RateHandlerTestSuite struct {
 	logger *zap.SugaredLogger
 }
 
-type successRateClient struct{}
-
-func (c successRateClient) GetDollarRate(ctx context.Context) (float64, error) {
-	return 10.0, nil
-}
-
-type failedRateClient struct{}
-
-func (c failedRateClient) GetDollarRate(ctx context.Context) (float64, error) {
-	return 0.0, errors.New("banks not available")
-}
-
 func (t *RateHandlerTestSuite) SetupSuite() {
 	l := zap.NewNop()
 	t.logger = l.Sugar()
@@ -39,8 +29,11 @@ func (t *RateHandlerTestSuite) SetupSuite() {
 
 func (t *RateHandlerTestSuite) TestSuccessfulGetCurrentRate() {
 	expectedRate := float64(10.0)
-	s := successRateClient{}
-	h := handlers.NewRateHandler(t.logger, s)
+
+	mockRateClient := mocks.NewRateClient(t.T())
+	mockRateClient.On("GetDollarRate", mock.Anything).Return(expectedRate, nil)
+	
+	h := handlers.NewRateHandler(t.logger, mockRateClient)
 
 	req := httptest.NewRequest(http.MethodGet, "/rates", nil)
 	w := httptest.NewRecorder()
@@ -59,8 +52,10 @@ func (t *RateHandlerTestSuite) TestSuccessfulGetCurrentRate() {
 	require.Equal(t.T(), w.Result().StatusCode, http.StatusOK)
 }
 func (t *RateHandlerTestSuite) TestFailureGetCurrentRate() {
-	f := failedRateClient{}
-	h := handlers.NewRateHandler(t.logger, f)
+	mockRateClient := mocks.NewRateClient(t.T())
+	mockRateClient.On("GetDollarRate", mock.Anything).Return( 0.0, errors.New("banks not available"))
+
+	h := handlers.NewRateHandler(t.logger, mockRateClient)
 
 	req := httptest.NewRequest(http.MethodGet, "/rates", nil)
 	w := httptest.NewRecorder()

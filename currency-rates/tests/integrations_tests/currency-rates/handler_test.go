@@ -14,7 +14,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/RinaDish/currency-rates/integrations_tests/pkg/testdb"
+	"github.com/RinaDish/currency-rates/tests/integrations_tests/pkg/testdb"
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/RinaDish/currency-rates/internal/repo"
 	"github.com/stretchr/testify/require"

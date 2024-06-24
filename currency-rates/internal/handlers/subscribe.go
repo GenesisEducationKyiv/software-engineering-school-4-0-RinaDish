@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"go.uber.org/zap"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
@@ -15,18 +15,18 @@ type Db interface {
 }
 
 type SubscribeHandler struct {
-	l *zap.SugaredLogger
-	r Db
+	logger tools.Logger
+	repo Db
 }
 
-func NewSubscribeHandler(l *zap.SugaredLogger, r Db) SubscribeHandler {
+func NewSubscribeHandler(logger tools.Logger, repo Db) SubscribeHandler {
 	return SubscribeHandler{
-		l: l,
-		r: r,
+		logger: logger,
+		repo: repo,
 	}
 }
 
-func (h SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *http.Request) {
+func (handler SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Form parse error", http.StatusConflict)
@@ -39,10 +39,12 @@ func (h SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *http.Requ
 
 	if !isValidEmail(email) {
 		http.Error(w, "Invalid email", http.StatusConflict)
+		handler.logger.Info("Invalid email")
+		
 		return
 	}
 	
-	err = h.r.SetEmail(r.Context(), email)
+	err = handler.repo.SetEmail(r.Context(), email)
 	responseStatus := http.StatusOK
 	if err != nil {
 		responseStatus = http.StatusConflict

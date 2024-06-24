@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/RinaDish/currency-rates/internal/app"
+	"github.com/RinaDish/currency-rates/tools"
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -23,12 +24,18 @@ func main() {
 
 	l, _ := config.Build()
 	defer l.Sync() // nolint:errcheck
-	logger := l.Sugar()
+	sugaredLogger := l.Sugar()
+
+	appLogger := tools.NewZapLogger(sugaredLogger)
 
 	ctx := context.Background()
 
-	application := app.NewApp(cfg, logger)
-	if err := application.Run(ctx); err != nil {
-		logger.Error(err)
+	application, err := app.NewApp(cfg, appLogger, ctx)
+	if err != nil {
+		appLogger.Panic("Critical error", err)
+	}
+
+	if err := application.Run(); err != nil {
+		appLogger.Error(err)
 	}
 }

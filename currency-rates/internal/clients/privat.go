@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-  "github.com/RinaDish/currency-rates/tools"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 type PrivatRate struct {
@@ -57,11 +57,15 @@ func (privatClient PrivatClient) GetDollarRate(ctx context.Context) (float64, er
 	  return 0.0, err
   }
 
-  for _, val := range ans {
-    if val.Ccy == "USD" {
-      return strconv.ParseFloat(val.Sale, 64)
+  if len(ans) > 0 {
+    privatClient.logger.Info("Rate: ", ans)
+
+    for _, val := range ans {
+      if val.Ccy == "USD" {
+        return strconv.ParseFloat(val.Sale, 64)
+      }
     }
   }
-
+  
   return 0.0, errors.New("currency not found")
 }

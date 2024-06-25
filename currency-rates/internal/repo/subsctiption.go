@@ -1,6 +1,8 @@
 package repo
 
-import "context"
+import (
+	"context"
+)
 
 type Email struct {
 	ID    int    `json:"id" gorm:"id"`

@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -10,107 +9,105 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
-	
 	"github.com/RinaDish/currency-rates/internal/handlers"
+	"github.com/RinaDish/currency-rates/internal/handlers/mocks"
 	"github.com/RinaDish/currency-rates/tools"
+
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"go.uber.org/zap"
 )
 
-type successDb struct{}
-
-func (d successDb) SetEmail(ctx context.Context, email string) error {
-	return nil
+type SubscribeHandlerTestSuite struct {
+	suite.Suite
+	logger  tools.Logger
 }
 
-type failDb struct{}
-
-func (d failDb) SetEmail(ctx context.Context, email string) error {
-	return errors.New("email exist")
-}
-
-func TestCreateSubscription(main *testing.T) {
+func (t *SubscribeHandlerTestSuite) SetupSuite() {
 	l := zap.NewNop()
+	logger := l.Sugar()
 
-	main.Run("succesfully", func(t *testing.T) {
-		d := successDb{}
+	t.logger = tools.NewZapLogger(logger)
+}
 
-		sugaredLogger := l.Sugar()
-		appLogger := tools.NewZapLogger(sugaredLogger)
+func (t *SubscribeHandlerTestSuite)TestSuccessfulCreateSubscription() {	
+	mockDB := mocks.NewDb(t.T())
+	mockDB.On("SetEmail", mock.Anything, "test@test.com").Return(nil)
 
-		h := handlers.NewSubscribeHandler(appLogger, d)
+	h := handlers.NewSubscribeHandler(t.logger, mockDB)
 
-		form := url.Values{}
-		form.Add("email", "test@test.com")
+	form := url.Values{}
+	form.Add("email", "test@test.com")
 
-		req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-		w := httptest.NewRecorder()
+	w := httptest.NewRecorder()
 
-		h.CreateSubscription(w, req)
-		res := w.Result()
+	h.CreateSubscription(w, req)
+	res := w.Result()
 
-		defer res.Body.Close()
-		data, err := io.ReadAll(res.Body)
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
 
-		require.NoError(t, err)
-		require.Empty(t, data)
+	require.NoError(t.T(), err)
+	require.Empty(t.T(), data)
 
-		require.Equal(t, w.Result().StatusCode, http.StatusOK)
-	})
-	main.Run("failure invalid email", func(t *testing.T) {
-		d := successDb{}
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusOK)
+}
 
-		sugaredLogger := l.Sugar()
-		appLogger := tools.NewZapLogger(sugaredLogger)
+func (t *SubscribeHandlerTestSuite)TestFailureInvalidEmail() {	
+	mockDB := mocks.NewDb(t.T())
 
-		h := handlers.NewSubscribeHandler(appLogger, d)
+	h := handlers.NewSubscribeHandler(t.logger, mockDB)
 
-		form := url.Values{}
-		form.Add("email", "test")
+	form := url.Values{}
+	form.Add("email", "test")
 
-		req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-		w := httptest.NewRecorder()
+	w := httptest.NewRecorder()
 
-		h.CreateSubscription(w, req)
-		res := w.Result()
+	h.CreateSubscription(w, req)
+	res := w.Result()
 
-		defer res.Body.Close()
-		data, err := io.ReadAll(res.Body)
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
 
-		require.NoError(t, err)
-		require.Equal(t, "Invalid email\n", string(data))
+	require.NoError(t.T(), err)
+	require.Equal(t.T(), "Invalid email\n", string(data))
 
-		require.Equal(t, w.Result().StatusCode, http.StatusConflict)
-	})
-	main.Run("failure db set email", func(t *testing.T) {
-		d := failDb{}
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusConflict)
+}
 
-		sugaredLogger := l.Sugar()
-		appLogger := tools.NewZapLogger(sugaredLogger)
+func (t *SubscribeHandlerTestSuite)TestFailureDbSetEmail() {	
+	mockDB := mocks.NewDb(t.T())
+	mockDB.On("SetEmail", mock.Anything, "test@gmail.com").Return(errors.New("email exist"))
 
-		h := handlers.NewSubscribeHandler(appLogger, d)
+	h := handlers.NewSubscribeHandler(t.logger, mockDB)
 
-		form := url.Values{}
-		form.Add("email", "test@gmail.com")
+	form := url.Values{}
+	form.Add("email", "test@gmail.com")
 
-		req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-		w := httptest.NewRecorder()
+	w := httptest.NewRecorder()
 
-		h.CreateSubscription(w, req)
-		res := w.Result()
-		
-		defer res.Body.Close()
-		data, err := io.ReadAll(res.Body)
+	h.CreateSubscription(w, req)
+	res := w.Result()
+	
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
 
-		require.NoError(t, err)
-		require.Empty(t, data)
+	require.NoError(t.T(), err)
+	require.Empty(t.T(), data)
 
-		require.Equal(t, w.Result().StatusCode, http.StatusConflict)
-	})
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusConflict)
+}
+
+func TestSubscribeHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(SubscribeHandlerTestSuite))
 }

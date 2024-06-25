@@ -3,10 +3,11 @@ package clients
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
-  "github.com/RinaDish/currency-rates/tools"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 type NBURate struct {
@@ -57,7 +58,11 @@ func (nbuClient NBUClient) GetDollarRate(ctx context.Context) (float64, error){
     return 0.0, err
   }
 
-  nbuClient.logger.Info("Rate: ", ans[0].Rate)
-  
-  return ans[0].Rate, nil
+  if len(ans) > 0 {
+    nbuClient.logger.Info("Rate: ", ans[0].Rate)
+    
+    return ans[0].Rate, nil
+  } else {
+    return 0.0, errors.New("rate not found")
+  }
 }

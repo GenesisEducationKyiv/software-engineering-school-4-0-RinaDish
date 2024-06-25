@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/RinaDish/currency-rates/internal/clients"
@@ -12,6 +13,8 @@ import (
 	"github.com/RinaDish/currency-rates/internal/services"
 	"github.com/RinaDish/currency-rates/tools"
 	"github.com/go-co-op/gocron/v2"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type App struct {
@@ -22,6 +25,7 @@ type App struct {
 	subscriptionService services.SubscriptionService
 	subscriptionCron  scheduler.Cron
 	router routers.Router
+	db *gorm.DB
 }
 
 func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
@@ -29,10 +33,13 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	privatClient := clients.NewPrivatClient(logger)
 	rateService := services.NewRate(logger, []services.RateClient{nbuClient, privatClient})
 
-	adminRepository, err := repo.NewAdminRepository(c.DBUrl, logger)
+	db, err := gorm.Open(postgres.Open(c.DBUrl), &gorm.Config{})
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
+
+	adminRepository := repo.NewAdminRepository(db, logger)
 
 	emailSender, err := services.NewEmail(c.EmailAddress, c.EmailPass, logger)
 	if err != nil {
@@ -58,13 +65,20 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 		subscriptionService: subscriptionService,
 		subscriptionCron: cron,
 		router: router,
+		db: db,
 	}, nil
 }
 
 func (app *App) Run() error {
 	subscriptionCron := app.subscriptionCron.StartCron()
 
-	defer func() { _ = subscriptionCron.Shutdown() }()
+	defer func() { 
+			_ = subscriptionCron.Shutdown() 
+			
+			if db, err := app.db.DB(); err == nil {
+			_ = db.Close()
+			}
+		}()
 
 	app.logger.Info("app run")
 	

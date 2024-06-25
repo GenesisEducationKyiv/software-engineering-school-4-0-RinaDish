@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -9,74 +8,73 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
-
 	"github.com/RinaDish/currency-rates/internal/handlers"
+	"github.com/RinaDish/currency-rates/internal/handlers/mocks"
 	"github.com/RinaDish/currency-rates/tools"
+
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"go.uber.org/zap"
 )
 
-type successRateClient struct{}
-
-func (c successRateClient) GetDollarRate(ctx context.Context) (float64, error) {
-	return 10.0, nil
+type RateHandlerTestSuite struct {
+	suite.Suite
+	logger  tools.Logger
 }
 
-type failedRateClient struct{}
-
-func (c failedRateClient) GetDollarRate(ctx context.Context) (float64, error) {
-	return 0.0, errors.New("banks not available")
-}
-
-func TestGetCurrentRate(main *testing.T) {
+func (t *RateHandlerTestSuite) SetupSuite() {
 	l := zap.NewNop()
+	logger := l.Sugar()
+
+	t.logger = tools.NewZapLogger(logger)
+}
+
+func (t *RateHandlerTestSuite) TestSuccessfulGetCurrentRate() {
+	expectedRate := float64(10.0)
+
+	mockRateClient := mocks.NewRateClient(t.T())
+	mockRateClient.On("GetDollarRate", mock.Anything).Return(expectedRate, nil)
 	
-	main.Run("succesfully returned rates", func(t *testing.T) {
-		expectedRate := float64(10.0)
-		s := successRateClient{}
+	h := handlers.NewRateHandler(t.logger, mockRateClient)
 
-		sugaredLogger := l.Sugar()
-		appLogger := tools.NewZapLogger(sugaredLogger)
+	req := httptest.NewRequest(http.MethodGet, "/rates", nil)
+	w := httptest.NewRecorder()
 
-		h := handlers.NewRateHandler(appLogger, s)
+	h.GetCurrentRate(w, req)
+	res := w.Result()
 
-		req := httptest.NewRequest(http.MethodGet, "/rates", nil)
-		w := httptest.NewRecorder()
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	require.NoError(t.T(), err)
 
-		h.GetCurrentRate(w, req)
-		res := w.Result()
+	rate, err := strconv.ParseFloat(string(data), 64)
+	require.NoError(t.T(), err)
+	require.Equal(t.T(), expectedRate, rate)
 
-		defer res.Body.Close()
-		data, err := io.ReadAll(res.Body)
-		require.NoError(t, err)
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusOK)
+}
+func (t *RateHandlerTestSuite) TestFailureGetCurrentRate() {
+	mockRateClient := mocks.NewRateClient(t.T())
+	mockRateClient.On("GetDollarRate", mock.Anything).Return( 0.0, errors.New("banks not available"))
 
-		rate, err := strconv.ParseFloat(string(data), 64)
-		require.NoError(t, err)
-		require.Equal(t, expectedRate, rate)
+	h := handlers.NewRateHandler(t.logger, mockRateClient)
 
-		require.Equal(t, w.Result().StatusCode, http.StatusOK)
-	})
+	req := httptest.NewRequest(http.MethodGet, "/rates", nil)
+	w := httptest.NewRecorder()
 
-	main.Run("failed returned rates", func(t *testing.T) {
-		f := failedRateClient{}
+	h.GetCurrentRate(w, req)
+	res := w.Result()
 
-		sugaredLogger := l.Sugar()
-		appLogger := tools.NewZapLogger(sugaredLogger)
-		
-		h := handlers.NewRateHandler(appLogger, f)
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
 
-		req := httptest.NewRequest(http.MethodGet, "/rates", nil)
-		w := httptest.NewRecorder()
+	require.NoError(t.T(), err)
+	require.Empty(t.T(), data)
 
-		h.GetCurrentRate(w, req)
-		res := w.Result()
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusBadRequest)
+}
 
-		defer res.Body.Close()
-		data, err := io.ReadAll(res.Body)
-
-		require.NoError(t, err)
-		require.Empty(t, data)
-
-		require.Equal(t, w.Result().StatusCode, http.StatusBadRequest)
-	})
+func TestRateHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(RateHandlerTestSuite))
 }

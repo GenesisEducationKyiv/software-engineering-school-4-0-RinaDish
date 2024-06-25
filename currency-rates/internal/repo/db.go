@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"github.com/RinaDish/currency-rates/tools"
@@ -12,11 +11,9 @@ type Repository struct {
 	logger tools.Logger
 }
 
-func NewAdminRepository(url string, logger tools.Logger) (*Repository, error) {
-	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
-	
+func NewAdminRepository(db *gorm.DB, logger tools.Logger) (*Repository) {
 	return &Repository{
 		DB:     db,
 		logger: logger.With("service", "repository"),
-	}, err
+	}
 }

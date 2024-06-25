@@ -14,9 +14,10 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/RinaDish/currency-rates/tests/integrations_tests/pkg/testdb"
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/RinaDish/currency-rates/internal/repo"
+	"github.com/RinaDish/currency-rates/tests/integrations_tests/pkg/testdb"
+	"github.com/RinaDish/currency-rates/tools"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -28,21 +29,21 @@ type UserHandlerTestSuite struct {
 	DB *gorm.DB
 }
 
-func (suite *UserHandlerTestSuite) SetupSuite() {
-	suite.DB, _ = gorm.Open(postgres.Open(testdb.GetDBDSN()), &gorm.Config{})
-}
-
 func (suite *UserHandlerTestSuite) BeforeTest(suiteName, testName string) {
-	db, _ := suite.DB.DB()
-	db.Close()
-
 	testdb.ResetDBTemplate(suite.T(), testdb.GetTemplateDBDSN(), testdb.DBName, testdb.TemplateDBName)
 
 	suite.DB, _ = gorm.Open(postgres.Open(testdb.GetDBDSN()), &gorm.Config{})
 }
 
+func (suite *UserHandlerTestSuite) AfterTest(suiteName, testName string) {
+	if db, err := suite.DB.DB(); err == nil {
+		_ = db.Close()
+	}
+}
+
 func setupUserHandler(db *gorm.DB) (handlers.SubscribeHandler, *repo.Repository) {
-	logger := zap.NewNop().Sugar()
+	l := zap.NewNop().Sugar()
+	logger := tools.NewZapLogger(l)
 
 	adminRepository := repo.NewAdminRepository(db, logger)
 

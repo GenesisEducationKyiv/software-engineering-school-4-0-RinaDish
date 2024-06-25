@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"go.uber.org/zap"
+	"github.com/RinaDish/currency-rates/tools"
 )
 
 type PrivatRate struct {
@@ -17,33 +17,30 @@ type PrivatRate struct {
 }
 
 type PrivatClient struct {
-	l *zap.SugaredLogger
-	c *http.Client
+	logger tools.Logger
+	client *http.Client
 }
 
-func NewPrivatClient(l *zap.SugaredLogger) PrivatClient {
-	client := &http.Client {
-	}
+func NewPrivatClient(logger tools.Logger) PrivatClient {
+  client := http.DefaultClient
 
 	return PrivatClient{
-		l: l.With("client", "PrivatBank"),
-		c: client,
+		logger: logger.With("client", "PrivatBank"),
+		client: client,
 	}
 }
 
-func (n PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
+func (privatClient PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
   url := "https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5"
 
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
   if err != nil {
-    n.l.Info(err)
     return 0.0, err
   }
   
-  res, err := n.c.Do(req)
+  res, err := privatClient.client.Do(req)
   if err != nil {
-    n.l.Info(err)
     return 0.0, err
   }
 
@@ -51,22 +48,24 @@ func (n PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
 
   body, err := io.ReadAll(res.Body)
   if err != nil {
-    n.l.Info(err)
     return 0.0, err
   }
 
   var ans []PrivatRate
   err = json.Unmarshal(body, &ans)
   if err != nil {
-	n.l.Info(err)
-	return 0.0, err
+	  return 0.0, err
   }
 
-  for _, val := range ans {
-    if val.Ccy == "USD" {
-      return strconv.ParseFloat(val.Sale, 64)
+  if len(ans) > 0 {
+    privatClient.logger.Info("Rate: ", ans)
+
+    for _, val := range ans {
+      if val.Ccy == "USD" {
+        return strconv.ParseFloat(val.Sale, 64)
+      }
     }
   }
-
+  
   return 0.0, errors.New("currency not found")
 }

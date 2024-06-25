@@ -2,3 +2,4 @@
 data/
 *client_secret*
 results.*
+*.DS_Store

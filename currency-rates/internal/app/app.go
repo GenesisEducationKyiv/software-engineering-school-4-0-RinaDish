@@ -2,74 +2,85 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/RinaDish/currency-rates/internal/clients"
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/RinaDish/currency-rates/internal/repo"
+	"github.com/RinaDish/currency-rates/internal/routers"
+	"github.com/RinaDish/currency-rates/internal/scheduler"
 	"github.com/RinaDish/currency-rates/internal/services"
-	"github.com/go-chi/chi/v5"
+	"github.com/RinaDish/currency-rates/tools"
 	"github.com/go-co-op/gocron/v2"
-	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type App struct {
 	cfg Config
-	l   *zap.SugaredLogger
+	logger   tools.Logger
+	subscriptionHandler handlers.SubscribeHandler
+	ratesHandler handlers.RateHandler
+	subscriptionService services.SubscriptionService
+	subscriptionCron  scheduler.Cron
+	router routers.Router
+	db *gorm.DB
 }
 
-func NewApp(c Config, l *zap.SugaredLogger) *App {
+func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
+	nbuClient := clients.NewNBUClient(logger)
+	privatClient := clients.NewPrivatClient(logger)
+	rateService := services.NewRate(logger, []services.RateClient{nbuClient, privatClient})
+
+	db, err := gorm.Open(postgres.Open(c.DBUrl), &gorm.Config{})
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	adminRepository := repo.NewAdminRepository(db, logger)
+
+	emailSender, err := services.NewEmail(c.EmailAddress, c.EmailPass, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	subscriptionService := services.NewSubscriptionService(logger, adminRepository, emailSender, rateService)
+	ratesHandler := handlers.NewRateHandler(logger, rateService)
+	subscriptionHandler := handlers.NewSubscribeHandler(logger, adminRepository)
+
+	cron := scheduler.NewCron(logger)
+	task := gocron.NewTask(subscriptionService.NotifySubscribers, ctx)
+	
+	cron.RegisterTask("0 2 * * *", task)
+
+	router := routers.NewRouter(logger, ratesHandler, subscriptionHandler)
+
 	return &App{
 		cfg: c,
-		l:   l,
-	}
+		logger: logger,
+		subscriptionHandler: subscriptionHandler,
+		ratesHandler: ratesHandler,
+		subscriptionService: subscriptionService,
+		subscriptionCron: cron,
+		router: router,
+		db: db,
+	}, nil
 }
 
-func (app *App) Run(ctx context.Context) error {
-	nbuClient := clients.NewNBUClient(app.l)
-	privatClient := clients.NewPrivatClient(app.l)
-	rateService := services.NewRate(app.l, []services.RateClient{nbuClient, privatClient})
+func (app *App) Run() error {
+	subscriptionCron := app.subscriptionCron.StartCron()
 
-	db, err := gorm.Open(postgres.Open(app.cfg.DBUrl), &gorm.Config{})
-	if err != nil {
-		return err
-	}
+	defer func() { 
+			_ = subscriptionCron.Shutdown() 
+			
+			if db, err := app.db.DB(); err == nil {
+			_ = db.Close()
+			}
+		}()
+
+	app.logger.Info("app run")
 	
-	defer func() {
-		if db, err := db.DB(); err == nil {
-		  _ = db.Close()
-		}
-	  }()
-	
-	adminRepository := repo.NewAdminRepository(db, app.l)
-
-	subscriptionSender := services.NewEmail(app.cfg.EmailAddress, app.cfg.EmailPass, app.l)
-	subscriptionService := services.NewSubscriptionService(app.l, adminRepository, subscriptionSender, rateService)
-	ratesHandler := handlers.NewRateHandler(app.l, rateService)
-	subscriptionHandler := handlers.NewSubscribeHandler(app.l, adminRepository)
-
-	s, _ := gocron.NewScheduler()
-	defer func() { _ = s.Shutdown() }()
-	
-	_, _ = s.NewJob(
-		gocron.CronJob(
-			"0 2 * * *",
-			false,
-		),
-		gocron.NewTask(
-			subscriptionService.NotifySubscribers, ctx,
-		),
-	)
-
-	s.Start()
-
-	r := chi.NewRouter()
-	r.Get("/rate", ratesHandler.GetCurrentRate)
-	r.Post("/subscribe", subscriptionHandler.CreateSubscription)
-
-	app.l.Info("app run")
-	
-	return http.ListenAndServe(app.cfg.Address, r)
+	return http.ListenAndServe(app.cfg.Address, app.router.GetRouter())
 }

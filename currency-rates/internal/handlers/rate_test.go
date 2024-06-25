@@ -10,6 +10,7 @@ import (
 
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/RinaDish/currency-rates/internal/handlers/mocks"
+	"github.com/RinaDish/currency-rates/tools"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -19,12 +20,14 @@ import (
 
 type RateHandlerTestSuite struct {
 	suite.Suite
-	logger *zap.SugaredLogger
+	logger  tools.Logger
 }
 
 func (t *RateHandlerTestSuite) SetupSuite() {
 	l := zap.NewNop()
-	t.logger = l.Sugar()
+	logger := l.Sugar()
+
+	t.logger = tools.NewZapLogger(logger)
 }
 
 func (t *RateHandlerTestSuite) TestSuccessfulGetCurrentRate() {

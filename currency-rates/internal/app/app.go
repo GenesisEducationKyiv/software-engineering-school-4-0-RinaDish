@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/RinaDish/currency-rates/internal/clients"
@@ -31,11 +30,18 @@ type App struct {
 func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	nbuClient := clients.NewNBUClient(logger)
 	privatClient := clients.NewPrivatClient(logger)
-	rateService := services.NewRate(logger, []services.RateClient{nbuClient, privatClient})
+
+	nbuRateGetter := clients.NewClient("nbu", nbuClient)
+	privatRateGetter := clients.NewClient("privat", privatClient)
+
+	nbuChain := clients.NewBaseChain(nbuRateGetter)
+	privatChain := clients.NewBaseChain(privatRateGetter)
+	nbuChain.SetNext(privatChain)
+	
+	rateService := services.NewRate(logger, nbuChain)
 
 	db, err := gorm.Open(postgres.Open(c.DBUrl), &gorm.Config{})
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 

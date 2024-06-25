@@ -19,16 +19,16 @@ type NBUClient struct {
 	client *http.Client
 }
 
-func NewNBUClient(logger tools.Logger) NBUClient {
+func NewNBUClient(logger tools.Logger) *NBUClient {
   client := http.DefaultClient
 
-	return NBUClient{
+	return &NBUClient{
 		logger: logger.With("client", "NBU"),
 		client: client,
 	}
 }
 
-func (nbuClient NBUClient) GetDollarRate(ctx context.Context) (float64, error){
+func (nbuClient *NBUClient) GetDollarRate(ctx context.Context) (float64, error){
   url := "https://bank.gov.ua/NBUStatService/v1/statdirectory/dollar_info?json"
 
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

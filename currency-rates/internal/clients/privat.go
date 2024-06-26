@@ -31,6 +31,9 @@ func NewPrivatClient(logger tools.Logger) *PrivatClient {
 }
 
 func (privatClient *PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
+  ctx, cancel := context.WithTimeout(ctx, ApiCallTimeout)
+	defer cancel()
+
   url := "https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5"
 
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

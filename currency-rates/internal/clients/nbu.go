@@ -29,6 +29,9 @@ func NewNBUClient(logger tools.Logger) *NBUClient {
 }
 
 func (nbuClient *NBUClient) GetDollarRate(ctx context.Context) (float64, error){
+  ctx, cancel := context.WithTimeout(ctx, ApiCallTimeout)
+	defer cancel()
+
   url := "https://bank.gov.ua/NBUStatService/v1/statdirectory/dollar_info?json"
 
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

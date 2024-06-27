@@ -60,9 +60,9 @@ func (privatClient *PrivatClient) GetDollarRate(ctx context.Context) (float64, e
 	  return 0.0, err
   }
 
-  if len(ans) > 0 {
-    privatClient.logger.Info("Rate: ", ans)
+  privatClient.logger.Info("Rate: ", ans)
 
+  if len(ans) > 0 {
     for _, val := range ans {
       if val.Ccy == "USD" {
         return strconv.ParseFloat(val.Sale, 64)

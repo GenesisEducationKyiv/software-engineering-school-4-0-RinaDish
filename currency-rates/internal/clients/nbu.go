@@ -61,9 +61,9 @@ func (nbuClient *NBUClient) GetDollarRate(ctx context.Context) (float64, error){
     return 0.0, err
   }
 
+  nbuClient.logger.Info("Rate: ", ans[0].Rate)
+  
   if len(ans) > 0 {
-    nbuClient.logger.Info("Rate: ", ans[0].Rate)
-    
     return ans[0].Rate, nil
   } else {
     return 0.0, errors.New("rate not found")

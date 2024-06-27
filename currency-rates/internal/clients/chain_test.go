@@ -16,6 +16,7 @@ import (
 
 var expectedSuccessRate = float64(10.0)
 var expectedFailRate = float64(0.0)
+var errBankNotAvailable = errors.New("bank not available")
 
 type ChainTestSuite struct {
 	suite.Suite
@@ -35,13 +36,13 @@ func (t *ChainTestSuite) SetupSuite() {
 	t.successClient = mockRateClientS
 
 	mockRateClientF := mocks.NewRateClient(t.T())
-	mockRateClientF.On("GetDollarRate", mock.Anything).Return(expectedFailRate, errors.New("bank not available"))
+	mockRateClientF.On("GetDollarRate", mock.Anything).Return(expectedFailRate, errBankNotAvailable)
 	t.failClient = mockRateClientF
 }
 
-func setChain(cf clients.RateClient, cs clients.RateClient) *clients.BaseChain {
-	clf := clients.NewBaseChain(cf)
-	cls := clients.NewBaseChain(cs)
+func setChain(clientFirst clients.RateClient, clientSecond clients.RateClient) *clients.BaseChain {
+	clf := clients.NewBaseChain(clientFirst)
+	cls := clients.NewBaseChain(clientSecond)
 	clf.SetNext(cls)
 
 	return clf
@@ -50,10 +51,10 @@ func setChain(cf clients.RateClient, cs clients.RateClient) *clients.BaseChain {
 func (t *ChainTestSuite) TestSuccessFirstClient() {
 	client := setChain(t.successClient, t.successClient)
 
-	rate, err := client.GetDollarRate(context.Background())
+	actualRate, err := client.GetDollarRate(context.Background())
 
 	require.NoError(t.T(), err)
-	require.Equal(t.T(), expectedSuccessRate, rate)
+	require.Equal(t.T(), expectedSuccessRate, actualRate)
 
 	t.successClient.AssertExpectations(t.T())
 }
@@ -61,10 +62,10 @@ func (t *ChainTestSuite) TestSuccessFirstClient() {
 func (t *ChainTestSuite) TestSuccessSecondClient() {
 	client := setChain(t.failClient, t.successClient)
 
-	rate, err := client.GetDollarRate(context.Background())
+	actualRate, err := client.GetDollarRate(context.Background())
 
 	require.NoError(t.T(), err)
-	require.Equal(t.T(), expectedSuccessRate, rate)
+	require.Equal(t.T(), expectedSuccessRate, actualRate)
 
 	t.failClient.AssertExpectations(t.T())
 	t.successClient.AssertExpectations(t.T())
@@ -73,11 +74,11 @@ func (t *ChainTestSuite) TestSuccessSecondClient() {
 func (t *ChainTestSuite) TestFailClient() {
 	client := setChain(t.failClient, t.failClient)
 
-	rate, err := client.GetDollarRate(context.Background())
+	actualRate, err := client.GetDollarRate(context.Background())
 
 	require.Error(t.T(), err)
-	require.Equal(t.T(), expectedFailRate, rate)
-	require.Contains(t.T(), err.Error(), "bank not available")
+	require.Equal(t.T(), expectedFailRate, actualRate)
+	require.True(t.T(), errors.Is(err, errBankNotAvailable))
 
 	t.failClient.AssertExpectations(t.T())
 }

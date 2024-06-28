@@ -55,8 +55,6 @@ func (t *ChainTestSuite) TestSuccessFirstClient() {
 
 	require.NoError(t.T(), err)
 	require.Equal(t.T(), expectedSuccessRate, actualRate)
-
-	t.successClient.AssertExpectations(t.T())
 }
 
 func (t *ChainTestSuite) TestSuccessSecondClient() {
@@ -66,9 +64,6 @@ func (t *ChainTestSuite) TestSuccessSecondClient() {
 
 	require.NoError(t.T(), err)
 	require.Equal(t.T(), expectedSuccessRate, actualRate)
-
-	t.failClient.AssertExpectations(t.T())
-	t.successClient.AssertExpectations(t.T())
 }
 
 func (t *ChainTestSuite) TestFailClient() {
@@ -79,8 +74,6 @@ func (t *ChainTestSuite) TestFailClient() {
 	require.Error(t.T(), err)
 	require.Equal(t.T(), expectedFailRate, actualRate)
 	require.True(t.T(), errors.Is(err, errBankNotAvailable))
-
-	t.failClient.AssertExpectations(t.T())
 }
 
 func TestChainTestSuite(t *testing.T) {

@@ -45,6 +45,7 @@ jobs:
         run: go install -v github.com/fdaines/arch-go@latest
 
       - name: Run arch test
+        working-directory: currency-rates/
         run: arch-go -v  
         
   integration-test:
@@ -81,4 +82,3 @@ jobs:
 
       - name: Down Docker container
         run: docker-compose  -f docker-compose.test.yaml down
-        

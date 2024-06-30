@@ -44,12 +44,9 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 
 	adminRepository := repo.NewAdminRepository(db, logger)
 
-	emailSender, err := services.NewEmail(c.EmailAddress, c.EmailPass, logger)
-	if err != nil {
-		return nil, err
-	}
+	notificationClient := clients.NewNotificationClient(c.NotificationServiceUrl, logger)
 
-	subscriptionService := services.NewSubscriptionService(logger, adminRepository, emailSender, rateService)
+	subscriptionService := services.NewSubscriptionService(logger, adminRepository, notificationClient, rateService)
 	ratesHandler := handlers.NewRateHandler(logger, rateService)
 	subscriptionHandler := handlers.NewSubscribeHandler(logger, adminRepository)
 

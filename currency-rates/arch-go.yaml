@@ -29,11 +29,6 @@ dependenciesRules:
     shouldOnlyDependsOn:
       internal:
         - "**.tools.**"
-  - package: "**.services.**"
-    shouldOnlyDependsOn:
-      internal:
-        - "**.repo.**"
-        - "**.tools.**"
   - package: "**.tools.**"
     shouldOnlyDependsOn:
       internal:    
@@ -43,8 +38,6 @@ dependenciesRules:
   - package: "**.cmd.**"
     shouldOnlyDependsOn:
       internal:      
-        - "**.app.**"
-        - "**.tools.**"
 
 functionsRules:
   - package: "**.services.**"

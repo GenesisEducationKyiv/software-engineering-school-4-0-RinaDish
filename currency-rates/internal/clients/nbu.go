@@ -19,16 +19,19 @@ type NBUClient struct {
 	client *http.Client
 }
 
-func NewNBUClient(logger tools.Logger) NBUClient {
+func NewNBUClient(logger tools.Logger) *NBUClient {
   client := http.DefaultClient
 
-	return NBUClient{
+	return &NBUClient{
 		logger: logger.With("client", "NBU"),
 		client: client,
 	}
 }
 
-func (nbuClient NBUClient) GetDollarRate(ctx context.Context) (float64, error){
+func (nbuClient *NBUClient) GetDollarRate(ctx context.Context) (float64, error){
+  ctx, cancel := context.WithTimeout(ctx, ApiCallTimeout)
+	defer cancel()
+
   url := "https://bank.gov.ua/NBUStatService/v1/statdirectory/dollar_info?json"
 
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -58,9 +61,9 @@ func (nbuClient NBUClient) GetDollarRate(ctx context.Context) (float64, error){
     return 0.0, err
   }
 
+  nbuClient.logger.Info("Rate: ", ans[0].Rate)
+  
   if len(ans) > 0 {
-    nbuClient.logger.Info("Rate: ", ans[0].Rate)
-    
     return ans[0].Rate, nil
   } else {
     return 0.0, errors.New("rate not found")

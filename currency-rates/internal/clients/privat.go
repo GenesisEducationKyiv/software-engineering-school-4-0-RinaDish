@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/RinaDish/currency-rates/tools"
+  "github.com/RinaDish/currency-rates/tools"
 )
 
 type PrivatRate struct {
@@ -21,16 +21,19 @@ type PrivatClient struct {
 	client *http.Client
 }
 
-func NewPrivatClient(logger tools.Logger) PrivatClient {
+func NewPrivatClient(logger tools.Logger) *PrivatClient {
   client := http.DefaultClient
 
-	return PrivatClient{
+	return &PrivatClient{
 		logger: logger.With("client", "PrivatBank"),
 		client: client,
 	}
 }
 
-func (privatClient PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
+func (privatClient *PrivatClient) GetDollarRate(ctx context.Context) (float64, error)  {
+  ctx, cancel := context.WithTimeout(ctx, ApiCallTimeout)
+	defer cancel()
+
   url := "https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5"
 
   req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -57,9 +60,9 @@ func (privatClient PrivatClient) GetDollarRate(ctx context.Context) (float64, er
 	  return 0.0, err
   }
 
-  if len(ans) > 0 {
-    privatClient.logger.Info("Rate: ", ans)
+  privatClient.logger.Info("Rate: ", ans)
 
+  if len(ans) > 0 {
     for _, val := range ans {
       if val.Ccy == "USD" {
         return strconv.ParseFloat(val.Sale, 64)

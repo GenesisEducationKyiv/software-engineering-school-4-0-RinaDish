@@ -13,7 +13,6 @@ import (
 type App struct {
 	cfg Config
 	logger   tools.Logger
-
 	router routers.Router
 }
 
@@ -32,13 +31,12 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	return &App{
 		cfg: c,
 		logger: logger,
-
 		router: router,
 	}, nil
 }
 
 func (app *App) Run() error {
 	app.logger.Info("app run")
-	
+
 	return http.ListenAndServe(app.cfg.Address, app.router.GetRouter())
 }

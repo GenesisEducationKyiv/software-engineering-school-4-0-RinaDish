@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/RinaDish/currency-rates/internal/repo"
 	"github.com/RinaDish/currency-rates/tools"
 )
 
+type Email struct {
+	ID    int    `json:"id" gorm:"id"`
+	Email string `json:"email" gorm:"email"`
+}
+
 type SubscriptionDb interface {
-	GetEmails(ctx context.Context) ([]repo.Email, error)
+	GetEmails(ctx context.Context) ([]Email, error)
 }
 
 type SubscriptionSender interface {

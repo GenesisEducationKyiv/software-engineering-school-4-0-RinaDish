@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/smtp"
 
-	"github.com/RinaDish/currency-rates/tools"
+	"github.com/RinaDish/subscription-sender/tools"
 )
 
 const serverName = "smtp.gmail.com"

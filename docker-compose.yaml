@@ -13,6 +13,15 @@ services:
       admin-db:
           condition: service_healthy  
 
+  subscriber:
+    restart: always
+    env_file:
+      - ./subscription-sender/.env
+    build:
+      context: ./subscription-sender
+    ports:
+      - "8184:8184"     
+
   admin-db:
     image: postgres:15.3
     restart: always

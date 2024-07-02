@@ -25,6 +25,24 @@ jobs:
           args: --timeout 5m
           working-directory: currency-rates/
 
+  subscription-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "subscription-sender/go.mod"
+          check-latest: true
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.56.0
+          args: --timeout 5m
+          working-directory: subscription-sender/
+
   test:
     runs-on: ubuntu-latest
     needs: currency-lint
@@ -76,25 +94,6 @@ jobs:
       - name: Down Docker container
         run: docker-compose  -f docker-compose.test.yaml down
 
-  subscription-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: "subscription-sender/go.mod"
-          check-latest: true
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.56.0
-          args: --timeout 5m
-          working-directory: subscription-sender/
-
-
   subscription-test:
     runs-on: ubuntu-latest
     needs: subscription-lint
@@ -104,9 +103,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: "subscription-rates/go.mod"
+          go-version-file: "subscription-sender/go.mod"
           check-latest: true
           
       - name: Tests
-        working-directory: subscription-rates/
+        working-directory: subscription-sender/
         run: go test -v ./...    

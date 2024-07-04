@@ -27,7 +27,7 @@ type App struct {
 	db *gorm.DB
 }
 
-func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
+func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	nbuClient := clients.NewNBUClient(logger)
 	privatClient := clients.NewPrivatClient(logger)
 
@@ -37,14 +37,14 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	
 	rateService := services.NewRate(logger, nbuChain)
 
-	db, err := gorm.Open(postgres.Open(c.DBUrl), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
 
 	adminRepository := repo.NewAdminRepository(db, logger)
 
-	notificationClient := clients.NewNotificationClient(c.NotificationServiceUrl, logger)
+	notificationClient := clients.NewNotificationClient(cfg.NotificationServiceURL, logger)
 
 	subscriptionService := services.NewSubscriptionService(logger, adminRepository, notificationClient, rateService)
 	ratesHandler := handlers.NewRateHandler(logger, rateService)
@@ -58,7 +58,7 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	router := routers.NewRouter(logger, ratesHandler, subscriptionHandler)
 
 	return &App{
-		cfg: c,
+		cfg: cfg,
 		logger: logger,
 		subscriptionHandler: subscriptionHandler,
 		ratesHandler: ratesHandler,

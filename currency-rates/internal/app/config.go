@@ -2,6 +2,6 @@ package app
 
 type Config struct {
 	Address string `envconfig:"ADDRESS"`
-	NotificationServiceUrl string `envconfig:"NOTIFICATION_SERVISE_URL"`
-	DBUrl string `envconfig:"DB_URL"`
+	NotificationServiceURL string `envconfig:"NOTIFICATION_SERVICE_URL"`
+	DBURL string `envconfig:"DB_URL"`
 }

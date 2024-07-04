@@ -20,13 +20,13 @@ type NotificationClient struct {
 	url string
 }
 
-func NewNotificationClient(notificationServiceUrl string, logger tools.Logger) NotificationClient {
+func NewNotificationClient(notificationServiceURL string, logger tools.Logger) NotificationClient {
 	client := http.DefaultClient
 
 	return NotificationClient{
 		logger: logger.With("client", "Notification"),
 		client: client,
-		url: notificationServiceUrl,
+		url: notificationServiceURL,
 	}
 }
 

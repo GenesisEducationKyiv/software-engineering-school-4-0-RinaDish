@@ -16,8 +16,8 @@ type App struct {
 	router routers.Router
 }
 
-func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
-	emailSender, err := services.NewEmail(c.EmailAddress, c.EmailPass, logger)
+func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) {
+	emailSender, err := services.NewEmail(cfg.EmailAddress, cfg.EmailPass, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	router := routers.NewRouter(logger, notifyHandler)
 
 	return &App{
-		cfg: c,
+		cfg: cfg,
 		logger: logger,
 		router: router,
 	}, nil

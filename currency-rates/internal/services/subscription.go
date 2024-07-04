@@ -51,7 +51,7 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context){
 		return
 	}
 
-	var actualEmails = make([]string, 0) 
+	actualEmails := make([]string, 0, len(emails))
 	for _, email := range emails {
 		actualEmails = append(actualEmails, email.Email)
 	}

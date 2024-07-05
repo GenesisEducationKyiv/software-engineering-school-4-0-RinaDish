@@ -8,5 +8,5 @@ https://devanswe.rs/create-application-specific-password-gmail/
 - Use:
 
 ```sh 
-docker compose up --build 
+docker compose up --build  
 ```

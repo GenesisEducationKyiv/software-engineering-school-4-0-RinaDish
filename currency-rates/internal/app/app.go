@@ -8,10 +8,12 @@ import (
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/RinaDish/currency-rates/internal/repo"
 	"github.com/RinaDish/currency-rates/internal/routers"
-	"github.com/RinaDish/currency-rates/internal/workers"
 	"github.com/RinaDish/currency-rates/internal/services"
+	"github.com/RinaDish/currency-rates/internal/workers"
+	"github.com/RinaDish/currency-rates/internal/queue"
 	"github.com/RinaDish/currency-rates/tools"
 	"github.com/go-co-op/gocron/v2"
+	"github.com/nats-io/nats.go"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -25,6 +27,7 @@ type App struct {
 	subscriptionCron  workers.Cron
 	router routers.Router
 	db *gorm.DB
+	queue *queue.Queue
 }
 
 func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) {
@@ -44,9 +47,14 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 
 	adminRepository := repo.NewAdminRepository(db, logger)
 
-	notificationClient := clients.NewNotificationClient(cfg.NotificationServiceURL, logger)
+	nats, err := nats.Connect(cfg.NatsURL)
+	if err != nil {
+		return nil, err
+	}
 
-	subscriptionService := services.NewSubscriptionService(logger, adminRepository, notificationClient, rateService)
+	queue := queue.NewQueue(nats, logger)
+
+	subscriptionService := services.NewSubscriptionService(logger, adminRepository, queue, rateService)
 	ratesHandler := handlers.NewRateHandler(logger, rateService)
 	subscriptionHandler := handlers.NewSubscribeHandler(logger, adminRepository)
 
@@ -66,6 +74,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 		subscriptionCron: cron,
 		router: router,
 		db: db,
+		queue: queue,
 	}, nil
 }
 
@@ -78,6 +87,8 @@ func (app *App) Run() error {
 			if db, err := app.db.DB(); err == nil {
 			_ = db.Close()
 			}
+
+			_ = app.queue.Nats.Drain()
 		}()
 
 	app.logger.Info("app run")

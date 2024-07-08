@@ -16,21 +16,21 @@ type SubscriptionDb interface {
 	GetEmails(ctx context.Context) ([]Email, error)
 }
 
-type SubscriptionSender interface {
-	Send(ctx context.Context, rate float64, emails []string) error
+type SubscriptionPublisher interface {
+	Publish(ctx context.Context, rate float64, emails []string) error
 }
 
 type SubscriptionService struct {
 	db SubscriptionDb
-	notificationClient SubscriptionSender
+	notification SubscriptionPublisher
 	logger tools.Logger
 	rateClient RateClient
 }
 
-func NewSubscriptionService(logger tools.Logger, d SubscriptionDb, s SubscriptionSender, r RateClient) SubscriptionService{
+func NewSubscriptionService(logger tools.Logger, d SubscriptionDb, s SubscriptionPublisher, r RateClient) SubscriptionService{
 	return SubscriptionService{
 		db: d,
-		notificationClient: s,
+		notification: s,
 		logger: logger,
 		rateClient: r,
 	}
@@ -58,7 +58,7 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context){
 
 	fmt.Println(actualEmails)
 
-	err = service.notificationClient.Send(ctx, rate, actualEmails)
+	err = service.notification.Publish(ctx, rate, actualEmails)
 	if err != nil {
 		service.logger.Error(err)
 		return

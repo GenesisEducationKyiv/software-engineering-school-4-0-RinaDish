@@ -20,11 +20,9 @@ type NBUClient struct {
 }
 
 func NewNBUClient(logger tools.Logger) *NBUClient {
-  client := http.DefaultClient
-
 	return &NBUClient{
 		logger: logger.With("client", "NBU"),
-		client: client,
+		client: http.DefaultClient,
 	}
 }
 

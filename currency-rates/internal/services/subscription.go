@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/RinaDish/currency-rates/tools"
 )
@@ -36,19 +35,19 @@ func NewSubscriptionService(logger tools.Logger, d SubscriptionDb, s Subscriptio
 	}
 }
 
-func (service SubscriptionService) NotifySubscribers(ctx context.Context){
+func (service SubscriptionService) NotifySubscribers(ctx context.Context) error {
 	rate, err := service.rateClient.GetDollarRate(ctx)
 
 	if err != nil {
 		service.logger.Error(err)
-		return
+		return err
 	}
 
 	emails, err := service.db.GetEmails(ctx)
 
 	if err != nil {
 		service.logger.Error(err)
-		return
+		return err
 	}
 
 	actualEmails := make([]string, 0, len(emails))
@@ -56,11 +55,11 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context){
 		actualEmails = append(actualEmails, email.Email)
 	}
 
-	fmt.Println(actualEmails)
-
 	err = service.notificationClient.Send(ctx, rate, actualEmails)
 	if err != nil {
 		service.logger.Error(err)
-		return
+		return err
 	}
+
+	return nil
 }

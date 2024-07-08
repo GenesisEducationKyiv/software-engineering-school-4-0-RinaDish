@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"github.com/RinaDish/subscription-sender/tools"
 )
@@ -30,6 +30,6 @@ func NewSubscriptionService(logger tools.Logger, sender SubscriptionSender) Subs
 
 func (service SubscriptionService) NotifySubscribers(ctx context.Context, notification Notification ){
 	for _, email := range notification.Emails {
-		service.sender.Send(email, fmt.Sprintf("%f", notification.Rate))
+		service.sender.Send(email, strconv.FormatFloat(notification.Rate, 'g', -1, 64))
 	}
 }

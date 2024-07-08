@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/RinaDish/currency-rates/tools"
 )
 
-type Notification struct {
+type notificationRequest struct {
 	Rate   float64  `json:"rate"`
 	Emails []string `json:"emails"`
 }
@@ -21,17 +22,15 @@ type NotificationClient struct {
 }
 
 func NewNotificationClient(notificationServiceURL string, logger tools.Logger) NotificationClient {
-	client := http.DefaultClient
-
 	return NotificationClient{
 		logger: logger.With("client", "Notification"),
-		client: client,
+		client: http.DefaultClient,
 		url: notificationServiceURL,
 	}
 }
 
 func (notificationClient NotificationClient) Send(ctx context.Context, rate float64, emails []string) error {
-	n := Notification{
+	n := notificationRequest{
 		Rate:   rate,
 		Emails: emails,
 	}
@@ -55,6 +54,10 @@ func (notificationClient NotificationClient) Send(ctx context.Context, rate floa
 	}
 
 	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return errors.New("notification failed")
+	}
 
 	return nil
 }

@@ -6,8 +6,12 @@ import (
 	"github.com/RinaDish/currency-rates/internal/services"
 )
 
+type DBEmail struct {
+    Email string
+}
+
 func (repo *Repository) SetEmail(ctx context.Context, email string) error {
-	e := &services.Email{
+	e := &DBEmail{
 		Email: email,
 	}
 

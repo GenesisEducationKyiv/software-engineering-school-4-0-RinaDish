@@ -24,8 +24,8 @@ func NewRateHandler(logger tools.Logger, client RateClient) RateHandler {
 	}
 }
 
-func (hadler RateHandler) GetCurrentRate(w http.ResponseWriter, r *http.Request) {
-	rate, err := hadler.rateClient.GetDollarRate(context.Background())
+func (handler RateHandler) GetCurrentRate(w http.ResponseWriter, r *http.Request) {
+	rate, err := handler.rateClient.GetDollarRate(context.Background())
 
 	w.Header().Set("Content-Type", "application/json")
 	if err == nil { 
@@ -34,7 +34,7 @@ func (hadler RateHandler) GetCurrentRate(w http.ResponseWriter, r *http.Request)
 		strRate := strconv.FormatFloat(rate, 'f', -1, 64)
 		_, err := w.Write([]byte(strRate))
 		if err != nil {
-			hadler.logger.Error(err)
+			handler.logger.Error(err)
 		}
 
 		return

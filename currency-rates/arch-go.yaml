@@ -6,23 +6,26 @@ dependenciesRules:
   - package: "**.services.**"
     shouldOnlyDependsOn:
       internal:
-        - "**.repo.**"
         - "**.tools.**"
   - package: "**.clients.**"
     shouldOnlyDependsOn:
       internal:
+        - "**.services.**"
         - "**.tools.**"
   - package: "**.handlers.**"
     shouldOnlyDependsOn:
       internal:
+        - "**.services.**"
         - "**.tools.**"
   - package: "**.repo.**"
     shouldOnlyDependsOn:
       internal:
+        - "**.services.**"
         - "**.tools.**"
   - package: "**.routers.**"
     shouldOnlyDependsOn:
       internal:
+        - "**.services.**"
         - "**.handlers.**"
         - "**.tools.**"
   - package: "**.scheduler.**"

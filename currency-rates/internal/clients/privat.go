@@ -22,11 +22,9 @@ type PrivatClient struct {
 }
 
 func NewPrivatClient(logger tools.Logger) *PrivatClient {
-  client := http.DefaultClient
-
-	return &PrivatClient{
+  return &PrivatClient{
 		logger: logger.With("client", "PrivatBank"),
-		client: client,
+		client: http.DefaultClient,
 	}
 }
 

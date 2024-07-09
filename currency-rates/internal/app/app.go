@@ -8,7 +8,7 @@ import (
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/RinaDish/currency-rates/internal/repo"
 	"github.com/RinaDish/currency-rates/internal/routers"
-	"github.com/RinaDish/currency-rates/internal/scheduler"
+	"github.com/RinaDish/currency-rates/internal/workers"
 	"github.com/RinaDish/currency-rates/internal/services"
 	"github.com/RinaDish/currency-rates/tools"
 	"github.com/go-co-op/gocron/v2"
@@ -22,12 +22,12 @@ type App struct {
 	subscriptionHandler handlers.SubscribeHandler
 	ratesHandler handlers.RateHandler
 	subscriptionService services.SubscriptionService
-	subscriptionCron  scheduler.Cron
+	subscriptionCron  workers.Cron
 	router routers.Router
 	db *gorm.DB
 }
 
-func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
+func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	nbuClient := clients.NewNBUClient(logger)
 	privatClient := clients.NewPrivatClient(logger)
 
@@ -37,23 +37,20 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	
 	rateService := services.NewRate(logger, nbuChain)
 
-	db, err := gorm.Open(postgres.Open(c.DBUrl), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
 
 	adminRepository := repo.NewAdminRepository(db, logger)
 
-	emailSender, err := services.NewEmail(c.EmailAddress, c.EmailPass, logger)
-	if err != nil {
-		return nil, err
-	}
+	notificationClient := clients.NewNotificationClient(cfg.NotificationServiceURL, logger)
 
-	subscriptionService := services.NewSubscriptionService(logger, adminRepository, emailSender, rateService)
+	subscriptionService := services.NewSubscriptionService(logger, adminRepository, notificationClient, rateService)
 	ratesHandler := handlers.NewRateHandler(logger, rateService)
 	subscriptionHandler := handlers.NewSubscribeHandler(logger, adminRepository)
 
-	cron := scheduler.NewCron(logger)
+	cron := workers.NewCron(logger)
 	task := gocron.NewTask(subscriptionService.NotifySubscribers, ctx)
 	
 	cron.RegisterTask("0 2 * * *", task)
@@ -61,7 +58,7 @@ func NewApp(c Config, logger tools.Logger, ctx context.Context) (*App, error) {
 	router := routers.NewRouter(logger, ratesHandler, subscriptionHandler)
 
 	return &App{
-		cfg: c,
+		cfg: cfg,
 		logger: logger,
 		subscriptionHandler: subscriptionHandler,
 		ratesHandler: ratesHandler,

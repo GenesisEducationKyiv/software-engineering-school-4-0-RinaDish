@@ -1,4 +1,4 @@
-package scheduler
+package workers
 
 import (
 	"github.com/go-co-op/gocron/v2"

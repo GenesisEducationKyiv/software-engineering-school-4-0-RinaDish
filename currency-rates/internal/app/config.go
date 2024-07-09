@@ -2,7 +2,6 @@ package app
 
 type Config struct {
 	Address string `envconfig:"ADDRESS"`
-	DBUrl string `envconfig:"DB_URL"`
-	EmailAddress string `envconfig:"EMAIL_ADDRESS"`
-	EmailPass string `envconfig:"EMAIL_PASS"`
+	NotificationServiceURL string `envconfig:"NOTIFICATION_SERVICE_URL"`
+	DBURL string `envconfig:"DB_URL"`
 }

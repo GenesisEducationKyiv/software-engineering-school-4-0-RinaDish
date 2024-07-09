@@ -52,7 +52,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 		return nil, err
 	}
 
-	queue := queue.NewQueue(nats, logger)
+	queue := queue.NewQueue(nats, cfg.SubscriptionTopicName, logger)
 
 	subscriptionService := services.NewSubscriptionService(logger, adminRepository, queue, rateService)
 	ratesHandler := handlers.NewRateHandler(logger, rateService)

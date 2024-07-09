@@ -8,9 +8,9 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-func (queue *Queue) Subscribe(ctx context.Context, subscriptionService services.SubscriptionService) error {
-	_, err := queue.QueueConn.Subscribe("subscription", func(msg *nats.Msg) {
-        queue.getMessage(msg, ctx, subscriptionService)
+func (queue *Queue) Subscribe(ctx context.Context) error {
+	_, err := queue.QueueConn.Subscribe(queue.subscriptionTopicName, func(msg *nats.Msg) {
+        queue.getMessage(msg, ctx)
     })
 
 	if err != nil {
@@ -22,10 +22,10 @@ func (queue *Queue) Subscribe(ctx context.Context, subscriptionService services.
 	return nil
 }
 
-func  (queue *Queue) getMessage(msg *nats.Msg, ctx context.Context, subscriptionService services.SubscriptionService) {
+func  (queue *Queue) getMessage(msg *nats.Msg, ctx context.Context) {
 	var unmrshBody services.Notification
 	_ = json.Unmarshal(msg.Data, &unmrshBody)
 
-	subscriptionService.NotifySubscribers(ctx, unmrshBody)
+	queue.subscriptionService.NotifySubscribers(ctx, unmrshBody)
 	queue.logger.Infof("Received a message: %s\n", string(msg.Data))
 }

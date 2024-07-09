@@ -18,7 +18,6 @@ type App struct {
 	logger   tools.Logger
 	router routers.Router
 	queue *queue.Queue
-	subscriptionService services.SubscriptionService
 	ctx context.Context
 }
 
@@ -39,14 +38,13 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 		return nil, err
 	}
 
-	queue := queue.NewQueue(nats, logger)
+	queue := queue.NewQueue(nats, cfg.SubscriptionTopicName, subscriptionService, logger)
 
 	return &App{
 		cfg: cfg,
 		logger: logger,
 		router: router,
 		queue: queue,
-		subscriptionService: subscriptionService,
 		ctx: ctx,
 	}, nil
 }
@@ -58,7 +56,7 @@ func (app *App) Run() error {
 		_ = app.queue.QueueConn.Drain()
 	}()
 
-	err := app.queue.Subscribe(app.ctx, app.subscriptionService)
+	err := app.queue.Subscribe(app.ctx)
 
 	if err != nil {
         app.logger.Errorf("err")

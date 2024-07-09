@@ -5,4 +5,5 @@ type Config struct {
 	NotificationServiceURL string `envconfig:"NOTIFICATION_SERVICE_URL"`
 	DBURL string `envconfig:"DB_URL"`
 	NatsURL string `envconfig:"NATS_URL"`
+	SubscriptionTopicName string `envconfig:"TOPIC_NAME"`
 }

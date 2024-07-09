@@ -14,7 +14,7 @@ type Notification struct {
 }
 
 func (queue *Queue) Subscribe(ctx context.Context, subscriptionService services.SubscriptionService) error {
-	_, err := queue.Nats.Subscribe("subscription", func(msg *nats.Msg) {
+	_, err := queue.QueueConn.Subscribe("subscription", func(msg *nats.Msg) {
         queue.getMessage(msg, ctx, subscriptionService)
     })
 

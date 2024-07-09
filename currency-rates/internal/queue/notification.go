@@ -22,5 +22,5 @@ func (queue *Queue) Publish(ctx context.Context, rate float64, emails []string) 
 		return err
 	}
 
-	return queue.Nats.Publish("subscription", payload)
+	return queue.QueueConn.Publish("subscription", payload)
 }

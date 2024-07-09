@@ -55,7 +55,7 @@ func (app *App) Run() error {
 	app.logger.Info("app run")
 	
 	defer func() { 
-		_ = app.queue.Nats.Drain()
+		_ = app.queue.QueueConn.Drain()
 	}()
 
 	err := app.queue.Subscribe(app.ctx, app.subscriptionService)

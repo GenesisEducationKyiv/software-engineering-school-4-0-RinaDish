@@ -88,7 +88,7 @@ func (app *App) Run() error {
 			_ = db.Close()
 			}
 
-			_ = app.queue.Nats.Drain()
+			_ = app.queue.QueueConn.Drain()
 		}()
 
 	app.logger.Info("app run")

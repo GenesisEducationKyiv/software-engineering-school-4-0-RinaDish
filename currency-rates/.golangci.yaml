@@ -1,0 +1,21 @@
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - wsl
+    - gomnd
+issues:
+  exclude-rules:
+    - text: "declarations should never be cuddled"
+      linters:
+        - wsl
+    - text: "only one cuddle assignment allowed before if statement"
+      linters:
+        - wsl    
+    - text: "if statements should only be cuddled with assignments"
+      linters:
+        - wsl        

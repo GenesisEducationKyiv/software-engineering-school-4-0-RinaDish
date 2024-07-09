@@ -1,0 +1,49 @@
+version: 1
+threshold:
+  compliance: 100
+  coverage: 75
+dependenciesRules:
+  - package: "**.services.**"
+    shouldOnlyDependsOn:
+      internal:
+        - "**.tools.**"
+  - package: "**.clients.**"
+    shouldOnlyDependsOn:
+      internal:
+        - "**.services.**"
+        - "**.tools.**"
+  - package: "**.handlers.**"
+    shouldOnlyDependsOn:
+      internal:
+        - "**.services.**"
+        - "**.tools.**"
+  - package: "**.repo.**"
+    shouldOnlyDependsOn:
+      internal:
+        - "**.services.**"
+        - "**.tools.**"
+  - package: "**.routers.**"
+    shouldOnlyDependsOn:
+      internal:
+        - "**.services.**"
+        - "**.handlers.**"
+        - "**.tools.**"
+  - package: "**.scheduler.**"
+    shouldOnlyDependsOn:
+      internal:
+        - "**.tools.**"
+  - package: "**.tools.**"
+    shouldOnlyDependsOn:
+      internal:    
+  - package: "**.tests.**"
+    shouldOnlyDependsOn:
+      internal:    
+  - package: "**.cmd.**"
+    shouldOnlyDependsOn:
+      internal:      
+
+functionsRules:
+  - package: "**.services.**"
+    maxParameters: 5
+    maxReturnValues: 2
+    maxLines: 100

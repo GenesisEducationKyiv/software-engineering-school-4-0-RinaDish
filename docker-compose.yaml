@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  api:
+    restart: always
+    env_file:
+      - ./currency-rates/.env
+    build:
+      context: ./currency-rates
+    ports:
+      - "8183:8183"
+    depends_on:
+      admin-db:
+          condition: service_healthy  
+
+  subscriber:
+    restart: always
+    env_file:
+      - ./subscription-sender/.env
+    build:
+      context: ./subscription-sender
+    ports:
+      - "8184:8184"     
+
+  admin-db:
+    image: postgres:15.3
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "7632:5432"
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d/
+      - ./data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5

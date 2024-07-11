@@ -25,7 +25,12 @@ services:
       - "8184:8184"    
     depends_on:
       nats:
-        condition: service_healthy       
+        condition: service_healthy    
+    healthcheck:
+      test: wget http://localhost:8184/health -q -S -O -
+      interval: 10s
+      timeout: 5s
+      retries: 3       
 
   admin-db:
     image: postgres:15.3

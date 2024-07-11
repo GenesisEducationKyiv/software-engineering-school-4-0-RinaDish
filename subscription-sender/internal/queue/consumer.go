@@ -1,21 +1,26 @@
 package queue
 
 import (
+	"context"
+
 	"github.com/nats-io/nats.go"
 
-	"github.com/RinaDish/subscription-sender/internal/services"
 	"github.com/RinaDish/subscription-sender/tools"
 )
 
+type notificationService interface {
+	GetMessage(msg *nats.Msg, ctx context.Context)
+}
+
 type Queue struct {
 	QueueConn *nats.Conn
-	messagesService *services.MessagesService
+	messagesService notificationService
 	subscriptionTopicName string
 	logger tools.Logger
 }
 
 
-func NewQueue(nats *nats.Conn,subscriptionTopicName string, messagesService *services.MessagesService, logger tools.Logger) (*Queue) {
+func NewQueue(nats *nats.Conn,subscriptionTopicName string, messagesService notificationService, logger tools.Logger) (*Queue) {
 	return &Queue{
 		QueueConn:     nats,
 		messagesService: messagesService,

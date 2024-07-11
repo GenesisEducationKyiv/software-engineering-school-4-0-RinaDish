@@ -9,6 +9,7 @@ import (
 type Email struct {
 	ID    int    `json:"id" gorm:"id"`
 	Email string `json:"email" gorm:"email"`
+	IsActive bool `json:"is_active" gorm:"is_active"`
 }
 
 type SubscriptionDb interface {

@@ -108,6 +108,33 @@ func (t *SubscribeHandlerTestSuite)TestFailureDbSetEmail() {
 	require.Equal(t.T(), w.Result().StatusCode, http.StatusConflict)
 }
 
+func (t *SubscribeHandlerTestSuite)TestSuccessfulDeactivateubscription() {	
+	mockDB := mocks.NewDb(t.T())
+	mockDB.On("DeactivateEmail", mock.Anything, "test@test.com").Return(nil)
+
+	h := handlers.NewSubscribeHandler(t.logger, mockDB)
+
+	form := url.Values{}
+	form.Add("email", "test@test.com")
+	
+	req := httptest.NewRequest(http.MethodPost, "/unsubscribe", strings.NewReader(form.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	w := httptest.NewRecorder()
+
+	h.DeactivateSubscription(w, req)
+
+	res := w.Result()
+
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+
+	require.NoError(t.T(), err)
+	require.Empty(t.T(), data)
+
+	require.Equal(t.T(), w.Result().StatusCode, http.StatusOK)
+}
+
 func TestSubscribeHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(SubscribeHandlerTestSuite))
 }

@@ -26,6 +26,7 @@ func (router Router) GetRouter() *chi.Mux {
 
 	r.Get("/rate", router.ratesHandler.GetCurrentRate)
 	r.Post("/subscribe", router.subscriptionHandler.CreateSubscription)
+	r.Post("/unsubscribe", router.subscriptionHandler.DeactivateSubscription)
 
 	return r
 }

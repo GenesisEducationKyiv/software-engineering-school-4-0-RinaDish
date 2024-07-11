@@ -6,4 +6,5 @@ type Config struct {
 	EmailPass string `envconfig:"EMAIL_PASS"`
 	NatsURL string `envconfig:"NATS_URL"`
 	SubscriptionTopicName string `envconfig:"TOPIC_NAME"`
+	DBURL string `envconfig:"DB_URL"`
 }

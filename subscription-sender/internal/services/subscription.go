@@ -16,20 +16,43 @@ type SubscriptionSender interface {
 	Send(to, body string)
 }
 
+type SubscriptionRepository interface {
+	GetMessages(ctx context.Context) ([]Message, error)
+	UpdateMessages(ctx context.Context, message Message) error
+}
+
 type SubscriptionService struct {
 	sender SubscriptionSender
+	repo SubscriptionRepository
 	logger tools.Logger
 }
 
-func NewSubscriptionService(logger tools.Logger, sender SubscriptionSender) SubscriptionService{
+func NewSubscriptionService(logger tools.Logger, sender SubscriptionSender, repo SubscriptionRepository) SubscriptionService{
 	return SubscriptionService{
 		sender: sender,
+		repo: repo,
 		logger: logger,
 	}
 }
 
-func (service SubscriptionService) NotifySubscribers(ctx context.Context, notification Notification ){
-	for _, email := range notification.Emails {
-		service.sender.Send(email, strconv.FormatFloat(notification.Rate, 'g', -1, 64))
+func (service SubscriptionService) NotifySubscribers(ctx context.Context) error {
+	msgs, err := service.repo.GetMessages(ctx) 
+
+	if err != nil {
+		return err
 	}
+
+	for _, msg := range msgs {
+		for _, email := range msg.Emails {
+			service.sender.Send(email, strconv.FormatFloat(msg.Rate, 'g', -1, 64))
+		}
+
+		err =  service.repo.UpdateMessages(ctx, msg)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

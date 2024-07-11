@@ -9,16 +9,16 @@ import (
 
 type Queue struct {
 	QueueConn *nats.Conn
-	subscriptionService services.SubscriptionService
+	messagesService *services.MessagesService
 	subscriptionTopicName string
 	logger tools.Logger
 }
 
 
-func NewQueue(nats *nats.Conn,subscriptionTopicName string, subscriptionService services.SubscriptionService, logger tools.Logger) (*Queue) {
+func NewQueue(nats *nats.Conn,subscriptionTopicName string, messagesService *services.MessagesService, logger tools.Logger) (*Queue) {
 	return &Queue{
 		QueueConn:     nats,
-		subscriptionService: subscriptionService,
+		messagesService: messagesService,
 		subscriptionTopicName: subscriptionTopicName,
 		logger: logger.With("service", "queue"),
 	}

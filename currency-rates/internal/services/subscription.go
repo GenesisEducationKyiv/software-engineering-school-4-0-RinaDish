@@ -61,5 +61,7 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context) error 
 		return err
 	}
 
+	service.logger.Infof("Messege sent to subscription service...")
+
 	return nil
 }

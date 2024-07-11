@@ -25,7 +25,9 @@ services:
       - "8184:8184"    
     depends_on:
       nats:
-        condition: service_healthy       
+        condition: service_healthy   
+      messages-db:
+        condition: service_healthy      
 
   admin-db:
     image: postgres:15.3
@@ -37,8 +39,26 @@ services:
     ports:
       - "7632:5432"
     volumes:
-      - ./sql:/docker-entrypoint-initdb.d/
-      - ./data:/var/lib/postgresql/data
+      - ./currency-rates/sql:/docker-entrypoint-initdb.d/
+      - ./currency-rates/data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  messages-db:
+    image: postgres:15.3
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "7633:5432"
+    volumes:
+      - ./subscription-sender/sql:/docker-entrypoint-initdb.d/
+      - ./subscription-sender/data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s

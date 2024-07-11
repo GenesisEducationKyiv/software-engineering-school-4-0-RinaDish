@@ -86,6 +86,10 @@ func (app *App) Run() error {
 	}()
 		
 	err := app.queue.Subscribe(app.ctx)
+
+	if err != nil {
+        app.logger.Error("Queue subscribe method faild")
+    }
 	
 	if err != nil {
 		app.logger.Errorf("err")

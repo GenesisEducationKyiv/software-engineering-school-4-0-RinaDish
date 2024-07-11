@@ -16,7 +16,7 @@ func (queue *Queue) Subscribe(ctx context.Context) error {
         return err
     }
 
-	queue.logger.Infof("Listening for messages on 'subscription' topic...")
+	queue.logger.Infof("Listening for messages on %s topic...", queue.subscriptionTopicName)
 
 	return nil
 }

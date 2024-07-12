@@ -6,7 +6,7 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-func (queue *Queue) Subscribe(ctx context.Context) error {
+func (queue *Queue) ConsumeSubscriptionEvent(ctx context.Context) error {
 	_, err := queue.QueueConn.Subscribe(queue.subscriptionTopicName, func(msg *nats.Msg) {
 		queue.logger.Infof("Received a message: %s\n", string(msg.Data))
         queue.messagesService.GetMessage(msg, ctx)

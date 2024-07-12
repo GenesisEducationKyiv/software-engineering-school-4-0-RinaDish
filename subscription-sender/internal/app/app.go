@@ -56,7 +56,7 @@ func (app *App) Run() error {
 		_ = app.queue.QueueConn.Drain()
 	}()
 
-	err := app.queue.Subscribe(app.ctx)
+	err := app.queue.ConsumeSubscriptionEvent(app.ctx)
 
 	if err != nil {
         app.logger.Error("Queue subscribe method faild")

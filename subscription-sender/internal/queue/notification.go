@@ -8,7 +8,7 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-func (queue *Queue) Subscribe(ctx context.Context) error {
+func (queue *Queue) ConsumeSubscriptionEvent(ctx context.Context) error {
 	_, err := queue.QueueConn.Subscribe(queue.subscriptionTopicName, func(msg *nats.Msg) {
         _ = queue.handleMessage(msg, ctx)
     })

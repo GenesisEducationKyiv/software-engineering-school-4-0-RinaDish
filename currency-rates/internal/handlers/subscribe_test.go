@@ -86,7 +86,6 @@ func (t *SubscribeHandlerTestSuite) TestFailureInvalidEmail() {
 }
 
 func (t *SubscribeHandlerTestSuite) TestFailureDbSetEmail() {
-	
 	mockTransaction := mocks.NewTransaction(t.T())
 	mockTransaction.On("ExecuteSubscription", mock.Anything, "test@gmail.com").Return(errors.New("email exist"))
 	

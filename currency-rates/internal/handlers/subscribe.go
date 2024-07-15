@@ -25,15 +25,13 @@ type SubscriptionService interface {
 
 type SubscribeHandler struct {
 	logger              tools.Logger
-	repo                Db
 	transaction         Transaction
 	subscriptionService SubscriptionService
 }
 
-func NewSubscribeHandler(logger tools.Logger, repo Db, transaction Transaction, subscriptionService SubscriptionService) SubscribeHandler {
+func NewSubscribeHandler(logger tools.Logger, transaction Transaction, subscriptionService SubscriptionService) SubscribeHandler {
 	return SubscribeHandler{
 		logger:              logger,
-		repo:                repo,
 		transaction:         transaction,
 		subscriptionService: subscriptionService,
 	}

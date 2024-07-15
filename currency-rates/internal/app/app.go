@@ -61,7 +61,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 
 	transaction := services.NewTransactionService(logger, customerService, subscriptionService)
 	ratesHandler := handlers.NewRateHandler(logger, rateService)
-	subscriptionHandler := handlers.NewSubscribeHandler(logger, adminRepository, transaction, subscriptionService)
+	subscriptionHandler := handlers.NewSubscribeHandler(logger, transaction, subscriptionService)
 
 	cron := workers.NewCron(logger)
 	task := gocron.NewTask(notificationService.NotifySubscribers, ctx)

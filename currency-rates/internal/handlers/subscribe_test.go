@@ -32,14 +32,12 @@ func (t *SubscribeHandlerTestSuite) SetupSuite() {
 }
 
 func (t *SubscribeHandlerTestSuite) TestSuccessfulCreateSubscription() {
-	mockDB := mocks.NewDb(t.T())
-
 	mockTransaction := mocks.NewTransaction(t.T())
 	mockTransaction.On("ExecuteSubscription", mock.Anything, "test@test.com").Return(nil)
 
 	mockService := mocks.NewSubscriptionService(t.T())
 
-	h := handlers.NewSubscribeHandler(t.logger, mockDB, mockTransaction, mockService)
+	h := handlers.NewSubscribeHandler(t.logger, mockTransaction, mockService)
 
 	form := url.Values{}
 	form.Add("email", "test@test.com")
@@ -62,12 +60,10 @@ func (t *SubscribeHandlerTestSuite) TestSuccessfulCreateSubscription() {
 }
 
 func (t *SubscribeHandlerTestSuite) TestFailureInvalidEmail() {
-	mockDB := mocks.NewDb(t.T())
-
 	mockTransaction := mocks.NewTransaction(t.T())
 	mockService := mocks.NewSubscriptionService(t.T())
 
-	h := handlers.NewSubscribeHandler(t.logger, mockDB, mockTransaction, mockService)
+	h := handlers.NewSubscribeHandler(t.logger, mockTransaction, mockService)
 
 	form := url.Values{}
 	form.Add("email", "test")
@@ -90,14 +86,13 @@ func (t *SubscribeHandlerTestSuite) TestFailureInvalidEmail() {
 }
 
 func (t *SubscribeHandlerTestSuite) TestFailureDbSetEmail() {
-	mockDB := mocks.NewDb(t.T())
 	
 	mockTransaction := mocks.NewTransaction(t.T())
 	mockTransaction.On("ExecuteSubscription", mock.Anything, "test@gmail.com").Return(errors.New("email exist"))
 	
 	mockService := mocks.NewSubscriptionService(t.T())
 
-	h := handlers.NewSubscribeHandler(t.logger, mockDB, mockTransaction, mockService)
+	h := handlers.NewSubscribeHandler(t.logger, mockTransaction, mockService)
 
 	form := url.Values{}
 	form.Add("email", "test@gmail.com")
@@ -120,14 +115,12 @@ func (t *SubscribeHandlerTestSuite) TestFailureDbSetEmail() {
 }
 
 func (t *SubscribeHandlerTestSuite) TestSuccessfulDeactivateubscription() {
-	mockDB := mocks.NewDb(t.T())
-
 	mockTransaction := mocks.NewTransaction(t.T())
 	mockService := mocks.NewSubscriptionService(t.T())
 
 	mockService.On("DeactivateSubscription", mock.Anything, "test@test.com").Return(nil)
 
-	h := handlers.NewSubscribeHandler(t.logger, mockDB, mockTransaction, mockService)
+	h := handlers.NewSubscribeHandler(t.logger, mockTransaction, mockService)
 
 	form := url.Values{}
 	form.Add("email", "test@test.com")

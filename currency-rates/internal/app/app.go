@@ -6,11 +6,11 @@ import (
 
 	"github.com/RinaDish/currency-rates/internal/clients"
 	"github.com/RinaDish/currency-rates/internal/handlers"
+	"github.com/RinaDish/currency-rates/internal/queue"
 	"github.com/RinaDish/currency-rates/internal/repo"
 	"github.com/RinaDish/currency-rates/internal/routers"
 	"github.com/RinaDish/currency-rates/internal/services"
 	"github.com/RinaDish/currency-rates/internal/workers"
-	"github.com/RinaDish/currency-rates/internal/queue"
 	"github.com/RinaDish/currency-rates/tools"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/nats-io/nats.go"
@@ -23,7 +23,7 @@ type App struct {
 	logger   tools.Logger
 	subscriptionHandler handlers.SubscribeHandler
 	ratesHandler handlers.RateHandler
-	subscriptionService services.SubscriptionService
+	notificationService services.NotificationService
 	subscriptionCron  workers.Cron
 	router routers.Router
 	db *gorm.DB
@@ -54,12 +54,17 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 
 	queue := queue.NewQueue(nats, cfg.SubscriptionTopicName, logger)
 
-	subscriptionService := services.NewSubscriptionService(logger, adminRepository, queue, rateService)
+	notificationService := services.NewNotificationService(logger, adminRepository, queue, rateService)
+
+	customerService := services.NewCustomerService(logger, adminRepository)
+	subscriptionService := services.NewSubscriptionService(logger, adminRepository)
+
+	transaction := services.NewTransactionService(logger, customerService, subscriptionService)
 	ratesHandler := handlers.NewRateHandler(logger, rateService)
-	subscriptionHandler := handlers.NewSubscribeHandler(logger, adminRepository)
+	subscriptionHandler := handlers.NewSubscribeHandler(logger, transaction, subscriptionService)
 
 	cron := workers.NewCron(logger)
-	task := gocron.NewTask(subscriptionService.NotifySubscribers, ctx)
+	task := gocron.NewTask(notificationService.NotifySubscribers, ctx)
 	
 	cron.RegisterTask("0 2 * * *", task)
 
@@ -70,7 +75,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 		logger: logger,
 		subscriptionHandler: subscriptionHandler,
 		ratesHandler: ratesHandler,
-		subscriptionService: subscriptionService,
+		notificationService: notificationService,
 		subscriptionCron: cron,
 		router: router,
 		db: db,

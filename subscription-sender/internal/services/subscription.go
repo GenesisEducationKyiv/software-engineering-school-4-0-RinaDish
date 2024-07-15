@@ -8,7 +8,7 @@ import (
 )
 
 type Notification struct {
-	Rate float64    `json:"rate"`
+	Rate   float64  `json:"rate"`
 	Emails []string `json:"emails"`
 }
 
@@ -21,22 +21,22 @@ type SubscriptionRepository interface {
 	UpdateMessages(ctx context.Context, message Message) error
 }
 
-type SubscriptionService struct {
+type NotificationService struct {
 	sender SubscriptionSender
-	repo SubscriptionRepository
+	repo   SubscriptionRepository
 	logger tools.Logger
 }
 
-func NewSubscriptionService(logger tools.Logger, sender SubscriptionSender, repo SubscriptionRepository) SubscriptionService{
-	return SubscriptionService{
+func NewNotificationService(logger tools.Logger, sender SubscriptionSender, repo SubscriptionRepository) NotificationService {
+	return NotificationService{
 		sender: sender,
-		repo: repo,
+		repo:   repo,
 		logger: logger,
 	}
 }
 
-func (service SubscriptionService) NotifySubscribers(ctx context.Context) error {
-	msgs, err := service.repo.GetMessages(ctx) 
+func (service NotificationService) NotifySubscribers(ctx context.Context) error {
+	msgs, err := service.repo.GetMessages(ctx)
 
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context) error 
 			service.sender.Send(email, strconv.FormatFloat(msg.Rate, 'g', -1, 64))
 		}
 
-		err =  service.repo.UpdateMessages(ctx, msg)
+		err = service.repo.UpdateMessages(ctx, msg)
 
 		if err != nil {
 			return err

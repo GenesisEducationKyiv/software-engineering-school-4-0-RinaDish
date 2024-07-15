@@ -16,6 +16,7 @@ import (
 
 	"github.com/RinaDish/currency-rates/internal/handlers"
 	"github.com/RinaDish/currency-rates/internal/repo"
+	"github.com/RinaDish/currency-rates/internal/services"
 	"github.com/RinaDish/currency-rates/tests/integrations_tests/pkg/testdb"
 	"github.com/RinaDish/currency-rates/tools"
 	"github.com/stretchr/testify/require"
@@ -47,7 +48,12 @@ func setupUserHandler(db *gorm.DB) (handlers.SubscribeHandler, *repo.Repository)
 
 	adminRepository := repo.NewAdminRepository(db, logger)
 
-	handler := handlers.NewSubscribeHandler(logger, adminRepository)
+	subscriptionService := services.NewSubscriptionService(logger, adminRepository)
+	customerService := services.NewCustomerService(logger, adminRepository)
+	
+	transaction := services.NewTransactionService(logger, customerService, subscriptionService)
+
+	handler := handlers.NewSubscribeHandler(logger, transaction, subscriptionService)
 
 	return handler, adminRepository
 }

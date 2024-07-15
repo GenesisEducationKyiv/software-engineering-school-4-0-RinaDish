@@ -15,15 +15,27 @@ type Db interface {
 	DeactivateEmail(ctx context.Context, email string) error
 }
 
-type SubscribeHandler struct {
-	logger tools.Logger
-	repo Db
+type Transaction interface {
+	ExecuteSubscription(ctx context.Context, email string) error
 }
 
-func NewSubscribeHandler(logger tools.Logger, repo Db) SubscribeHandler {
+type SubscriptionService interface {
+	DeactivateSubscription(ctx context.Context, email string) error
+}
+
+type SubscribeHandler struct {
+	logger              tools.Logger
+	repo                Db
+	transaction         Transaction
+	subscriptionService SubscriptionService
+}
+
+func NewSubscribeHandler(logger tools.Logger, repo Db, transaction Transaction, subscriptionService SubscriptionService) SubscribeHandler {
 	return SubscribeHandler{
-		logger: logger,
-		repo: repo,
+		logger:              logger,
+		repo:                repo,
+		transaction:         transaction,
+		subscriptionService: subscriptionService,
 	}
 }
 
@@ -41,11 +53,12 @@ func (handler SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *htt
 	if !isValidEmail(email) {
 		http.Error(w, "Invalid email", http.StatusConflict)
 		handler.logger.Info("Invalid email")
-		
+
 		return
 	}
-	
-	err = handler.repo.SetEmail(r.Context(), email)
+
+	err = handler.transaction.ExecuteSubscription(r.Context(), email)
+
 	responseStatus := http.StatusOK
 	if err != nil {
 		responseStatus = http.StatusConflict
@@ -58,19 +71,19 @@ func (handler SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *htt
 func isValidEmail(email string) bool {
 	return emailRegex.MatchString(email)
 }
-  
+
 func (handler SubscribeHandler) DeactivateSubscription(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Form parse error", http.StatusBadRequest) 
+		http.Error(w, "Form parse error", http.StatusBadRequest)
 		return
 	}
 
 	formData := r.Form
 
 	email := formData.Get("email")
-	
-	err = handler.repo.DeactivateEmail(r.Context(), email)
+
+	err = handler.subscriptionService.DeactivateSubscription(r.Context(), email)
 	responseStatus := http.StatusOK
 	if err != nil {
 		responseStatus = http.StatusNotFound

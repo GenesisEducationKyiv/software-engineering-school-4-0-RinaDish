@@ -21,7 +21,7 @@ import (
 
 type SubscribeHandlerTestSuite struct {
 	suite.Suite
-	logger  tools.Logger
+	logger tools.Logger
 }
 
 func (t *SubscribeHandlerTestSuite) SetupSuite() {
@@ -31,11 +31,15 @@ func (t *SubscribeHandlerTestSuite) SetupSuite() {
 	t.logger = tools.NewZapLogger(logger)
 }
 
-func (t *SubscribeHandlerTestSuite)TestSuccessfulCreateSubscription() {	
+func (t *SubscribeHandlerTestSuite) TestSuccessfulCreateSubscription() {
 	mockDB := mocks.NewDb(t.T())
-	mockDB.On("SetEmail", mock.Anything, "test@test.com").Return(nil)
 
-	h := handlers.NewSubscribeHandler(t.logger, mockDB)
+	mockTransaction := mocks.NewTransaction(t.T())
+	mockTransaction.On("ExecuteSubscription", mock.Anything, "test@test.com").Return(nil)
+
+	mockService := mocks.NewSubscriptionService(t.T())
+
+	h := handlers.NewSubscribeHandler(t.logger, mockDB, mockTransaction, mockService)
 
 	form := url.Values{}
 	form.Add("email", "test@test.com")
@@ -57,10 +61,13 @@ func (t *SubscribeHandlerTestSuite)TestSuccessfulCreateSubscription() {
 	require.Equal(t.T(), w.Result().StatusCode, http.StatusOK)
 }
 
-func (t *SubscribeHandlerTestSuite)TestFailureInvalidEmail() {	
+func (t *SubscribeHandlerTestSuite) TestFailureInvalidEmail() {
 	mockDB := mocks.NewDb(t.T())
 
-	h := handlers.NewSubscribeHandler(t.logger, mockDB)
+	mockTransaction := mocks.NewTransaction(t.T())
+	mockService := mocks.NewSubscriptionService(t.T())
+
+	h := handlers.NewSubscribeHandler(t.logger, mockDB, mockTransaction, mockService)
 
 	form := url.Values{}
 	form.Add("email", "test")
@@ -82,11 +89,15 @@ func (t *SubscribeHandlerTestSuite)TestFailureInvalidEmail() {
 	require.Equal(t.T(), w.Result().StatusCode, http.StatusConflict)
 }
 
-func (t *SubscribeHandlerTestSuite)TestFailureDbSetEmail() {	
+func (t *SubscribeHandlerTestSuite) TestFailureDbSetEmail() {
 	mockDB := mocks.NewDb(t.T())
-	mockDB.On("SetEmail", mock.Anything, "test@gmail.com").Return(errors.New("email exist"))
+	
+	mockTransaction := mocks.NewTransaction(t.T())
+	mockTransaction.On("ExecuteSubscription", mock.Anything, "test@gmail.com").Return(errors.New("email exist"))
+	
+	mockService := mocks.NewSubscriptionService(t.T())
 
-	h := handlers.NewSubscribeHandler(t.logger, mockDB)
+	h := handlers.NewSubscribeHandler(t.logger, mockDB, mockTransaction, mockService)
 
 	form := url.Values{}
 	form.Add("email", "test@gmail.com")
@@ -98,7 +109,7 @@ func (t *SubscribeHandlerTestSuite)TestFailureDbSetEmail() {
 
 	h.CreateSubscription(w, req)
 	res := w.Result()
-	
+
 	defer res.Body.Close()
 	data, err := io.ReadAll(res.Body)
 
@@ -108,15 +119,19 @@ func (t *SubscribeHandlerTestSuite)TestFailureDbSetEmail() {
 	require.Equal(t.T(), w.Result().StatusCode, http.StatusConflict)
 }
 
-func (t *SubscribeHandlerTestSuite)TestSuccessfulDeactivateubscription() {	
+func (t *SubscribeHandlerTestSuite) TestSuccessfulDeactivateubscription() {
 	mockDB := mocks.NewDb(t.T())
-	mockDB.On("DeactivateEmail", mock.Anything, "test@test.com").Return(nil)
 
-	h := handlers.NewSubscribeHandler(t.logger, mockDB)
+	mockTransaction := mocks.NewTransaction(t.T())
+	mockService := mocks.NewSubscriptionService(t.T())
+
+	mockService.On("DeactivateSubscription", mock.Anything, "test@test.com").Return(nil)
+
+	h := handlers.NewSubscribeHandler(t.logger, mockDB, mockTransaction, mockService)
 
 	form := url.Values{}
 	form.Add("email", "test@test.com")
-	
+
 	req := httptest.NewRequest(http.MethodPost, "/unsubscribe", strings.NewReader(form.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 

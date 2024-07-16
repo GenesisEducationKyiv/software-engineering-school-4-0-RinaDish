@@ -38,7 +38,9 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 		return nil, err
 	}
 
-	queue := queue.NewQueue(nats, cfg.SubscriptionTopicName, subscriptionService, logger)
+	natsbroker := queue.NewNATSBroker(nats)
+
+	queue := queue.NewQueue(natsbroker, cfg.SubscriptionTopicName, subscriptionService, logger)
 
 	return &App{
 		cfg: cfg,
@@ -53,7 +55,7 @@ func (app *App) Run() error {
 	app.logger.Info("app run")
 	
 	defer func() { 
-		_ = app.queue.QueueConn.Drain()
+		_ = app.queue.Broker.Drain()
 	}()
 
 	err := app.queue.ConsumeSubscriptionEvent(app.ctx)

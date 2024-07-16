@@ -9,7 +9,7 @@ import (
 )
 
 func (queue *Queue) ConsumeSubscriptionEvent(ctx context.Context) error {
-	_, err := queue.QueueConn.Subscribe(queue.subscriptionTopicName, func(msg *nats.Msg) {
+	_, err := queue.Broker.Subscribe(queue.subscriptionTopicName, func(msg *nats.Msg) {
         _ = queue.handleMessage(msg, ctx)
     })
 

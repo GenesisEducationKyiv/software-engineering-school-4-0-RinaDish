@@ -12,5 +12,5 @@ func (queue *Queue) Publish(ctx context.Context, message interface{}) error {
 		return err
 	}
 
-	return queue.QueueConn.Publish(queue.subscriptionTopicName, payload)
+	return queue.Broker.Publish(queue.subscriptionTopicName, payload)
 }

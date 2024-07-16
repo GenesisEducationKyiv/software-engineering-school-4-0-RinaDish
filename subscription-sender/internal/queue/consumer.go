@@ -9,21 +9,26 @@ import (
 	"github.com/RinaDish/subscription-sender/tools"
 )
 
+type Broker interface {
+	Subscribe(subj string, cb nats.MsgHandler) (*nats.Subscription, error)
+	Drain() error 
+}
+
 type NotificationService interface {
 	NotifySubscribers(ctx context.Context, notification services.Notification )
 }
 
 type Queue struct {
-	QueueConn *nats.Conn
+	Broker Broker
 	subscriptionService NotificationService
 	subscriptionTopicName string
 	logger tools.Logger
 }
 
 
-func NewQueue(nats *nats.Conn, subscriptionTopicName string, subscriptionService NotificationService, logger tools.Logger) (*Queue) {
+func NewQueue(broker Broker, subscriptionTopicName string, subscriptionService NotificationService, logger tools.Logger) (*Queue) {
 	return &Queue{
-		QueueConn:     nats,
+		Broker: broker,
 		subscriptionService: subscriptionService,
 		subscriptionTopicName: subscriptionTopicName,
 		logger: logger.With("service", "queue"),

@@ -1,21 +1,24 @@
 package queue
 
 import (
-	"github.com/nats-io/nats.go"
-
 	"github.com/RinaDish/currency-rates/tools"
 )
 
+type Broker interface {
+	Publish(subj string, data []byte) error
+	Drain() error 
+}
+
 type Queue struct {
-	QueueConn *nats.Conn
+	Broker Broker
 	subscriptionTopicName string
 	logger tools.Logger
 }
 
 
-func NewQueue(nats *nats.Conn, subscriptionTopicName string, logger tools.Logger) (*Queue) {
+func NewQueue(broker Broker, subscriptionTopicName string, logger tools.Logger) (*Queue) {
 	return &Queue{
-		QueueConn: nats,
+		Broker: broker,
 		subscriptionTopicName: subscriptionTopicName,
 		logger: logger.With("service", "queue"),
 	}

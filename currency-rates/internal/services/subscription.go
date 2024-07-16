@@ -2,9 +2,21 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"github.com/RinaDish/currency-rates/tools"
 )
+
+var notificationEventID uint8 = 1;
+var notificationEventType = "sended";
+
+type notification struct {
+	Rate   float64  `json:"rate"`
+	Emails []string `json:"emails"`
+	Timestamp time.Time `json:"timestamp"` 
+	EventID uint8 `json:"eventid"` 
+	EventType string `json:"eventtype"` 
+}
 
 type Email struct {
 	ID    int    `json:"id" gorm:"id"`
@@ -15,21 +27,21 @@ type SubscriptionDb interface {
 	GetEmails(ctx context.Context) ([]Email, error)
 }
 
-type SubscriptionSender interface {
-	Send(ctx context.Context, rate float64, emails []string) error
+type SubscriptionPublisher interface {
+	Publish(ctx context.Context, message interface{}) error
 }
 
 type SubscriptionService struct {
 	db SubscriptionDb
-	notificationClient SubscriptionSender
+	notification SubscriptionPublisher
 	logger tools.Logger
 	rateClient RateClient
 }
 
-func NewSubscriptionService(logger tools.Logger, d SubscriptionDb, s SubscriptionSender, r RateClient) SubscriptionService{
+func NewSubscriptionService(logger tools.Logger, d SubscriptionDb, s SubscriptionPublisher, r RateClient) SubscriptionService{
 	return SubscriptionService{
 		db: d,
-		notificationClient: s,
+		notification: s,
 		logger: logger,
 		rateClient: r,
 	}
@@ -55,7 +67,15 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context) error 
 		actualEmails = append(actualEmails, email.Email)
 	}
 
-	err = service.notificationClient.Send(ctx, rate, actualEmails)
+	n := notification{
+		Rate:   rate,
+		Emails: actualEmails,
+		Timestamp: time.Unix(time.Now().Unix(), 0),
+		EventID: notificationEventID,
+		EventType: notificationEventType,
+	}
+
+	err = service.notification.Publish(ctx, n)
 	if err != nil {
 		service.logger.Error(err)
 		return err

@@ -11,7 +11,9 @@ services:
       - "8183:8183"
     depends_on:
       admin-db:
-          condition: service_healthy  
+        condition: service_healthy  
+      nats:
+        condition: service_healthy
 
   subscriber:
     restart: always
@@ -20,7 +22,15 @@ services:
     build:
       context: ./subscription-sender
     ports:
-      - "8184:8184"     
+      - "8184:8184"    
+    depends_on:
+      nats:
+        condition: service_healthy    
+    healthcheck:
+      test: wget http://localhost:8184/health -q -S -O -
+      interval: 10s
+      timeout: 5s
+      retries: 3       
 
   admin-db:
     image: postgres:15.3
@@ -39,3 +49,17 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  nats:
+    image: nats:2.10.16-alpine3.19
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    environment:
+      - NATS_LOG_NAME=nats-server
+    healthcheck:
+      test: wget http://localhost:8222/healthz -q -S -O -
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  

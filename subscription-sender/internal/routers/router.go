@@ -9,20 +9,20 @@ import (
 
 type Router struct {
 	logger tools.Logger
-	notifyHandler handlers.NotifyHandler
+	healthCheckHandler handlers.HealthCheckHandler
 }
 
-func NewRouter(logger tools.Logger, notifyHandler handlers.NotifyHandler) Router {
+func NewRouter(logger tools.Logger, healthCheckHandler handlers.HealthCheckHandler) Router {
 	return Router{
 		logger: logger,
-		notifyHandler: notifyHandler,
+		healthCheckHandler: healthCheckHandler,
 	}
 }
 
 func (router Router) GetRouter() *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Post("/notify", router.notifyHandler.NotifySubscribers)
+	r.Get("/health", router.healthCheckHandler.HealthCheck)
 
 	return r
 }

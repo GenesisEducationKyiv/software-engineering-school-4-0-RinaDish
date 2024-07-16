@@ -5,15 +5,20 @@ import (
 	"net/http"
 
 	"github.com/RinaDish/subscription-sender/internal/handlers"
+	"github.com/RinaDish/subscription-sender/internal/queue"
 	"github.com/RinaDish/subscription-sender/internal/routers"
 	"github.com/RinaDish/subscription-sender/internal/services"
 	"github.com/RinaDish/subscription-sender/tools"
+
+	"github.com/nats-io/nats.go"
 )
 
 type App struct {
 	cfg Config
 	logger   tools.Logger
 	router routers.Router
+	queue *queue.SubscriptionNotifierConsumer
+	ctx context.Context
 }
 
 func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) {
@@ -24,19 +29,39 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 
 	subscriptionService := services.NewSubscriptionService(logger, emailSender)
 
-	notifyHandler := handlers.NewNotifyHandler(logger, subscriptionService)
+	healthCheckHandler := handlers.NewHealthCheckHandler(logger)
 
-	router := routers.NewRouter(logger, notifyHandler)
+	router := routers.NewRouter(logger, healthCheckHandler)
+
+	nats, err := nats.Connect(cfg.NatsURL)
+	if err != nil {
+		return nil, err
+	}
+
+	natsbroker := queue.NewNATSBroker(nats)
+
+	queue := queue.NewSubscriptionNotifierConsumer(natsbroker, cfg.SubscriptionTopicName, subscriptionService, logger)
 
 	return &App{
 		cfg: cfg,
 		logger: logger,
 		router: router,
+		queue: queue,
+		ctx: ctx,
 	}, nil
 }
 
 func (app *App) Run() error {
 	app.logger.Info("app run")
+	
+	defer func() { 
+		_ = app.queue.Broker.Drain()
+	}()
 
+	if err := app.queue.ConsumeSubscriptionEvent(app.ctx); err != nil {
+        app.logger.Error("Queue subscribe method failed")
+		return err
+    }
+	
 	return http.ListenAndServe(app.cfg.Address, app.router.GetRouter())
 }

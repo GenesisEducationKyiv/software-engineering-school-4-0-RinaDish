@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-func (queue *Queue) Publish(ctx context.Context, message interface{}) error {
+func (queue *SubscriptionNotifierProducer) Publish(ctx context.Context, message interface{}) error {
 	payload, err := json.Marshal(message)
 
 	if err != nil {

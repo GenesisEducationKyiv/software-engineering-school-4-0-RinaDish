@@ -17,7 +17,7 @@ type App struct {
 	cfg Config
 	logger   tools.Logger
 	router routers.Router
-	queue *queue.Queue
+	queue *queue.SubscriptionNotifierConsumer
 	ctx context.Context
 }
 
@@ -40,7 +40,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 
 	natsbroker := queue.NewNATSBroker(nats)
 
-	queue := queue.NewQueue(natsbroker, cfg.SubscriptionTopicName, subscriptionService, logger)
+	queue := queue.NewSubscriptionNotifierConsumer(natsbroker, cfg.SubscriptionTopicName, subscriptionService, logger)
 
 	return &App{
 		cfg: cfg,
@@ -58,10 +58,9 @@ func (app *App) Run() error {
 		_ = app.queue.Broker.Drain()
 	}()
 
-	err := app.queue.ConsumeSubscriptionEvent(app.ctx)
-
-	if err != nil {
-        app.logger.Error("Queue subscribe method faild")
+	if err := app.queue.ConsumeSubscriptionEvent(app.ctx); err != nil {
+        app.logger.Error("Queue subscribe method failed")
+		return err
     }
 	
 	return http.ListenAndServe(app.cfg.Address, app.router.GetRouter())

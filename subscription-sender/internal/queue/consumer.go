@@ -18,7 +18,7 @@ type NotificationService interface {
 	NotifySubscribers(ctx context.Context, notification services.Notification )
 }
 
-type Queue struct {
+type SubscriptionNotifierConsumer struct {
 	Broker Broker
 	subscriptionService NotificationService
 	subscriptionTopicName string
@@ -26,8 +26,8 @@ type Queue struct {
 }
 
 
-func NewQueue(broker Broker, subscriptionTopicName string, subscriptionService NotificationService, logger tools.Logger) (*Queue) {
-	return &Queue{
+func NewSubscriptionNotifierConsumer(broker Broker, subscriptionTopicName string, subscriptionService NotificationService, logger tools.Logger) (*SubscriptionNotifierConsumer) {
+	return &SubscriptionNotifierConsumer{
 		Broker: broker,
 		subscriptionService: subscriptionService,
 		subscriptionTopicName: subscriptionTopicName,

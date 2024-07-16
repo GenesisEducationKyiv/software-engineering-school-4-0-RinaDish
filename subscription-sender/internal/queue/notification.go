@@ -8,9 +8,11 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-func (queue *Queue) ConsumeSubscriptionEvent(ctx context.Context) error {
+func (queue *SubscriptionNotifierConsumer) ConsumeSubscriptionEvent(ctx context.Context) error {
 	_, err := queue.Broker.Subscribe(queue.subscriptionTopicName, func(msg *nats.Msg) {
-        _ = queue.handleMessage(msg, ctx)
+        if err := queue.handleMessage(msg, ctx); err != nil {
+			queue.logger.Error("Error handling queue message")
+		}
     })
 
 	if err != nil {
@@ -22,7 +24,7 @@ func (queue *Queue) ConsumeSubscriptionEvent(ctx context.Context) error {
 	return nil
 }
 
-func  (queue *Queue) handleMessage(msg *nats.Msg, ctx context.Context) error {
+func  (queue *SubscriptionNotifierConsumer) handleMessage(msg *nats.Msg, ctx context.Context) error {
 	var unmrshBody services.Notification
 	err := json.Unmarshal(msg.Data, &unmrshBody)
 

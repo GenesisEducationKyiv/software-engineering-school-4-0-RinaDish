@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/RinaDish/subscription-sender/internal/handlers"
-	"github.com/RinaDish/subscription-sender/internal/queue/subscription_notifier"
 	"github.com/RinaDish/subscription-sender/internal/queue"
 	"github.com/RinaDish/subscription-sender/internal/routers"
 	"github.com/RinaDish/subscription-sender/internal/services"
@@ -18,7 +17,7 @@ type App struct {
 	cfg Config
 	logger   tools.Logger
 	router routers.Router
-	queue *subscriptionnotifier.SubscriptionNotifierConsumer
+	queue *queue.SubscriptionNotifierConsumer
 	ctx context.Context
 }
 
@@ -41,7 +40,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 
 	natsbroker := queue.NewNATSBroker(nats)
 
-	queue := subscriptionnotifier.NewSubscriptionNotifierConsumer(natsbroker, cfg.SubscriptionTopicName, subscriptionService, logger)
+	queue := queue.NewSubscriptionNotifierConsumer(natsbroker, cfg.SubscriptionTopicName, subscriptionService, logger)
 
 	return &App{
 		cfg: cfg,

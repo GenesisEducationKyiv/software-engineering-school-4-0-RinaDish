@@ -11,7 +11,6 @@ import (
 	"github.com/RinaDish/currency-rates/internal/services"
 	"github.com/RinaDish/currency-rates/internal/workers"
 	"github.com/RinaDish/currency-rates/internal/queue"
-	"github.com/RinaDish/currency-rates/internal/queue/subscription_notifier"
 	"github.com/RinaDish/currency-rates/tools"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/nats-io/nats.go"
@@ -28,7 +27,7 @@ type App struct {
 	subscriptionCron  workers.Cron
 	router routers.Router
 	db *gorm.DB
-	queue *subscriptionnotifier.SubscriptionNotifierProducer
+	queue *queue.SubscriptionNotifierProducer
 }
 
 func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) {
@@ -55,7 +54,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 
 	natsbroker := queue.NewNATSBroker(nats)
 
-	queue := subscriptionnotifier.NewSubscriptionNotifierProducer(natsbroker, cfg.SubscriptionTopicName, logger)
+	queue := queue.NewSubscriptionNotifierProducer(natsbroker, cfg.SubscriptionTopicName, logger)
 
 	subscriptionService := services.NewSubscriptionService(logger, adminRepository, queue, rateService)
 	ratesHandler := handlers.NewRateHandler(logger, rateService)

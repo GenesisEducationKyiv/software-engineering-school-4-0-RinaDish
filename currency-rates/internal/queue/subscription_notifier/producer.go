@@ -1,4 +1,4 @@
-package queue
+package subscriptionnotifier
 
 import (
 	"github.com/RinaDish/currency-rates/tools"

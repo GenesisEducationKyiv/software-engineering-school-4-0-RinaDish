@@ -52,7 +52,9 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 		return nil, err
 	}
 
-	queue := queue.NewQueue(nats, cfg.SubscriptionTopicName, logger)
+	natsbroker := queue.NewNATSBroker(nats)
+
+	queue := queue.NewQueue(natsbroker, cfg.SubscriptionTopicName, logger)
 
 	subscriptionService := services.NewSubscriptionService(logger, adminRepository, queue, rateService)
 	ratesHandler := handlers.NewRateHandler(logger, rateService)
@@ -88,7 +90,7 @@ func (app *App) Run() error {
 			_ = db.Close()
 			}
 
-			_ = app.queue.QueueConn.Drain()
+			_ = app.queue.Broker.Drain()
 		}()
 
 	app.logger.Info("app run")

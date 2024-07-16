@@ -54,7 +54,9 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 		return nil, err
 	}
 
-	queue := queue.NewQueue(nats, cfg.SubscriptionTopicName, messagesService, logger)
+	natsbroker := queue.NewNATSBroker(nats)
+
+	queue := queue.NewQueue(natsbroker, cfg.SubscriptionTopicName, messagesService, logger)
 
 	cron := workers.NewCron(logger)
 	task := gocron.NewTask(subscriptionService.NotifySubscribers, ctx)
@@ -82,7 +84,7 @@ func (app *App) Run() error {
 			_ = db.Close()
 		}
 
-		_ = app.queue.QueueConn.Drain()
+		_ = app.queue.Broker.Drain()
 	}()
 
 	err := app.queue.ConsumeSubscriptionEvent(app.ctx)

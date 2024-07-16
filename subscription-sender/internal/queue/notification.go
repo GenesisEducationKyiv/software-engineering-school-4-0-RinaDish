@@ -7,9 +7,9 @@ import (
 )
 
 func (queue *Queue) ConsumeSubscriptionEvent(ctx context.Context) error {
-	_, err := queue.QueueConn.Subscribe(queue.subscriptionTopicName, func(msg *nats.Msg) {
+	_, err := queue.Broker.Subscribe(queue.subscriptionTopicName, func(msg *nats.Msg) {
 		queue.logger.Infof("Received a message: %s\n", string(msg.Data))
-        queue.messagesService.GetMessage(msg, ctx)
+        queue.messagesService.HandleMessage(msg, ctx)
     })
 
 	if err != nil {

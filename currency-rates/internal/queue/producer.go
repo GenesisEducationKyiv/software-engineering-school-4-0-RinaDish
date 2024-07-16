@@ -9,15 +9,15 @@ type Broker interface {
 	Drain() error 
 }
 
-type Queue struct {
+type SubscriptionNotifierProducer struct {
 	Broker Broker
 	subscriptionTopicName string
 	logger tools.Logger
 }
 
 
-func NewQueue(broker Broker, subscriptionTopicName string, logger tools.Logger) (*Queue) {
-	return &Queue{
+func NewSubscriptionNotifierProducer(broker Broker, subscriptionTopicName string, logger tools.Logger) (*SubscriptionNotifierProducer) {
+	return &SubscriptionNotifierProducer{
 		Broker: broker,
 		subscriptionTopicName: subscriptionTopicName,
 		logger: logger.With("service", "queue"),

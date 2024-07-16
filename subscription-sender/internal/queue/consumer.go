@@ -17,7 +17,7 @@ type notificationService interface {
 	HandleMessage(msg *nats.Msg, ctx context.Context)
 }
 
-type Queue struct {
+type SubscriptionNotifierConsumer struct {
 	Broker Broker
 	messagesService notificationService
 	subscriptionTopicName string
@@ -25,8 +25,8 @@ type Queue struct {
 }
 
 
-func NewQueue(broker Broker, subscriptionTopicName string, messagesService notificationService, logger tools.Logger) (*Queue) {
-	return &Queue{
+func NewSubscriptionNotifierConsumer(broker Broker, subscriptionTopicName string, messagesService notificationService, logger tools.Logger) (*SubscriptionNotifierConsumer) {
+	return &SubscriptionNotifierConsumer{
 		Broker: broker,
 		messagesService: messagesService,
 		subscriptionTopicName: subscriptionTopicName,

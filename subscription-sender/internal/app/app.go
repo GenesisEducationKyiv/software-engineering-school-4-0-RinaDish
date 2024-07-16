@@ -23,7 +23,7 @@ type App struct {
 	logger   tools.Logger
 	subscriptionCron  workers.Cron
 	router routers.Router
-	queue *queue.Queue
+	queue *queue.SubscriptionNotifierConsumer
 	db *gorm.DB
 	ctx context.Context
 }
@@ -56,7 +56,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 
 	natsbroker := queue.NewNATSBroker(nats)
 
-	queue := queue.NewQueue(natsbroker, cfg.SubscriptionTopicName, messagesService, logger)
+	queue := queue.NewSubscriptionNotifierConsumer(natsbroker, cfg.SubscriptionTopicName, messagesService, logger)
 
 	cron := workers.NewCron(logger)
 	task := gocron.NewTask(subscriptionService.NotifySubscribers, ctx)
@@ -87,16 +87,11 @@ func (app *App) Run() error {
 		_ = app.queue.Broker.Drain()
 	}()
 
-	err := app.queue.ConsumeSubscriptionEvent(app.ctx)
-
-	if err != nil {
-        app.logger.Error("Queue subscribe method faild")
+	if err := app.queue.ConsumeSubscriptionEvent(app.ctx); err != nil {
+        app.logger.Error("Queue subscribe method failed")
+		return err
     }
-	
-	if err != nil {
-		app.logger.Errorf("err")
-	}
-		
+
 	app.logger.Info("app run")
 
 	return http.ListenAndServe(app.cfg.Address, app.router.GetRouter())

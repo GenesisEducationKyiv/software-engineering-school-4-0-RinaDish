@@ -27,7 +27,7 @@ type App struct {
 	subscriptionCron  workers.Cron
 	router routers.Router
 	db *gorm.DB
-	queue *queue.Queue
+	queue *queue.SubscriptionNotifierProducer
 }
 
 func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) {
@@ -54,7 +54,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 
 	natsbroker := queue.NewNATSBroker(nats)
 
-	queue := queue.NewQueue(natsbroker, cfg.SubscriptionTopicName, logger)
+	queue := queue.NewSubscriptionNotifierProducer(natsbroker, cfg.SubscriptionTopicName, logger)
 
 	subscriptionService := services.NewSubscriptionService(logger, adminRepository, queue, rateService)
 	ratesHandler := handlers.NewRateHandler(logger, rateService)

@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"regexp"
 
 	"github.com/RinaDish/currency-rates/tools"
+	"gorm.io/gorm"
 )
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
@@ -72,8 +74,15 @@ func (handler SubscribeHandler) DeactivateSubscription(w http.ResponseWriter, r 
 	
 	err = handler.repo.DeactivateEmail(r.Context(), email)
 	responseStatus := http.StatusOK
+	
 	if err != nil {
-		responseStatus = http.StatusNotFound
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			responseStatus = http.StatusNotFound
+		} else if errors.Is(err, errors.New("database unavailable")) {
+			responseStatus = http.StatusServiceUnavailable
+		} else {
+			responseStatus = http.StatusInternalServerError
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

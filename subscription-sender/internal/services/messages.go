@@ -7,7 +7,6 @@ import (
 
 	"github.com/RinaDish/subscription-sender/tools"
 	"github.com/lib/pq"
-	"github.com/nats-io/nats.go"
 )
 
 type Message struct {
@@ -37,9 +36,9 @@ func NewMessagesService(db MessagesDB, logger tools.Logger) (*MessagesService) {
 	}
 }
 
-func  (messagesService *MessagesService) HandleMessage(msg *nats.Msg, ctx context.Context) {
+func  (messagesService *MessagesService) HandleMessage(msg []byte, ctx context.Context) {
 	var unmrshMsg Message
-	_ = json.Unmarshal(msg.Data, &unmrshMsg)
+	_ = json.Unmarshal(msg, &unmrshMsg)
 
 	unmrshMsg.Sent = false;
 

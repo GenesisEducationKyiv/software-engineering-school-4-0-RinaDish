@@ -14,7 +14,7 @@ type Broker interface {
 }
 
 type notificationService interface {
-	HandleMessage(msg *nats.Msg, ctx context.Context)
+	HandleMessage(msg []byte, ctx context.Context)
 }
 
 type SubscriptionNotifierConsumer struct {

@@ -28,11 +28,5 @@ func (repo *Repository) GetEmails(ctx context.Context) ([]services.Email, error)
 }
 
 func (repo *Repository) DeactivateEmail(ctx context.Context, email string) error {
-	err := repo.DB.Model(services.Email{}).Where("email = ?", email).Update("is_active", false).Error
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return repo.DB.Model(services.Email{}).Where("email = ?", email).Update("is_active", false).Error
 }

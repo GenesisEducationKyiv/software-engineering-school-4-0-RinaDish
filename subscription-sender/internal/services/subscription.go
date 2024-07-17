@@ -18,7 +18,7 @@ type SubscriptionSender interface {
 
 type SubscriptionRepository interface {
 	GetMessages(ctx context.Context) ([]Message, error)
-	UpdateMessages(ctx context.Context, message Message) error
+	UpdateMessages(ctx context.Context, msgID int) error
 }
 
 type SubscriptionService struct {
@@ -47,7 +47,7 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context) error 
 			service.sender.Send(email, strconv.FormatFloat(msg.Rate, 'g', -1, 64))
 		}
 
-		err =  service.repo.UpdateMessages(ctx, msg)
+		err =  service.repo.UpdateMessages(ctx, msg.ID)
 
 		if err != nil {
 			return err

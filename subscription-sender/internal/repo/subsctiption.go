@@ -44,7 +44,7 @@ func (repo *Repository) GetMessages(ctx context.Context) ([]services.Message, er
 	if err != nil {
 		return nil, err
 	}
-	
+
 	result := make([]services.Message, 0)
 	for _, msg := range msgsList {
 		result = append(result, services.Message{
@@ -62,6 +62,6 @@ func (repo *Repository) GetMessages(ctx context.Context) ([]services.Message, er
 	return result, err
 }
 
-func (repo *Repository) UpdateMessages(ctx context.Context, msg services.Message) error {
-	return repo.DB.Model(&message{}).WithContext(ctx).Where("id = ?", msg.ID).Update("sent", true).Error
+func (repo *Repository) UpdateMessages(ctx context.Context, msgID int) error {
+	return repo.DB.Model(&message{}).WithContext(ctx).Where("id = ?", msgID).Update("sent", true).Error
 }

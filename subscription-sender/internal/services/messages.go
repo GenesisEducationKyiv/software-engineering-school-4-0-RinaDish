@@ -6,18 +6,17 @@ import (
 	"time"
 
 	"github.com/RinaDish/subscription-sender/tools"
-	"github.com/lib/pq"
 )
 
 type Message struct {
-	ID    int    `json:"id" gorm:"id"`
-	Rate   float64  `json:"rate" gorm:"rate"`
-	Emails pq.StringArray  `json:"emails" gorm:"type:text[]"`
-	CreatedAt time.Time `json:"createdat" gorm:"created_at"` 
-	EventID uint8 `json:"eventid" gorm:"event_id"` 
-	EventType string `json:"eventtype" gorm:"event_type"` 
-	SendingTime time.Time `json:"sendingtime" gorm:"sending_time"`
-	Sent bool `json:"sent" gorm:"sent"`
+	ID int `json:"id"`
+	Rate float64 `json:"rate"`
+	Emails []string `json:"emails"`
+	CreatedAt time.Time `json:"createdat"`
+	EventID uint8 `json:"eventid"`
+	EventType string `json:"eventtype"`
+	SendingTime time.Time `json:"sendingtime"`
+	Sent bool `json:"sent"`
 }
 
 type MessagesDB interface {
@@ -40,8 +39,8 @@ func  (messagesService *MessagesService) HandleMessage(msg []byte, ctx context.C
 	var unmrshMsg Message
 	_ = json.Unmarshal(msg, &unmrshMsg)
 
-	unmrshMsg.Sent = false;
-
+	unmrshMsg.Sent = false
+	messagesService.logger.Info("Received message: ", unmrshMsg)
 	err := messagesService.db.SetMessages(ctx, unmrshMsg)
 
 	if err != nil {

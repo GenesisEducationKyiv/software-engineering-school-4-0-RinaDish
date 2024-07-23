@@ -2,9 +2,13 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"github.com/RinaDish/currency-rates/tools"
 )
+
+var delay = 500 * time.Millisecond
+var retries = 3;
 
 type DB interface {
 	SetEmail(ctx context.Context, email string) error
@@ -37,7 +41,16 @@ func (transaction Transaction) ExecuteSubscription(ctx context.Context, email st
 
 	
 	if err := transaction.createSubscription(ctx, email); err != nil {
-		err = transaction.compensateCreateUser(ctx, email)
+		for i := 0; i < retries; i++ {
+			err = transaction.compensateCreateUser(ctx, email)
+
+			if err == nil {
+				return nil
+			}
+			
+			time.Sleep(delay)
+			delay *= 2
+		}
 		return err
 	}
 

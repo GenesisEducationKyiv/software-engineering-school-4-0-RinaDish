@@ -10,3 +10,12 @@ https://devanswe.rs/create-application-specific-password-gmail/
 ```sh 
 docker compose up --build 
 ```
+
+# Possible Alerts: 
+
+- Slow Response Time: 95th percentile is higher than 10s 
+
+- Slow Database Query Time: 95th percentile is higher than 2,5s 
+
+- High Total number of errors: more than 100
+

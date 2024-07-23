@@ -6,6 +6,7 @@ import (
 
 	"github.com/RinaDish/currency-rates/internal/clients"
 	"github.com/RinaDish/currency-rates/internal/handlers"
+	"github.com/RinaDish/currency-rates/internal/metrics"
 	"github.com/RinaDish/currency-rates/internal/queue"
 	"github.com/RinaDish/currency-rates/internal/repo"
 	"github.com/RinaDish/currency-rates/internal/routers"
@@ -31,6 +32,8 @@ type App struct {
 }
 
 func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) {
+	metricsService := metrics.NewMetrics()
+
 	nbuClient := clients.NewNBUClient(logger)
 	privatClient := clients.NewPrivatClient(logger)
 
@@ -45,7 +48,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 		return nil, err
 	}
 
-	adminRepository := repo.NewAdminRepository(db, logger)
+	adminRepository := repo.NewAdminRepository(db, logger, metricsService)
 
 	nats, err := nats.Connect(cfg.NatsURL)
 	if err != nil {
@@ -68,7 +71,7 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 	
 	cron.RegisterTask("0 2 * * *", task)
 
-	router := routers.NewRouter(logger, ratesHandler, subscriptionHandler)
+	router := routers.NewRouter(logger, ratesHandler, subscriptionHandler, metricsService)
 
 	return &App{
 		cfg: cfg,

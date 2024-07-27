@@ -13,22 +13,22 @@ type Broker interface {
 	Drain() error 
 }
 
-type notificationService interface {
+type messagesService interface {
 	HandleMessage(msg []byte, ctx context.Context)
 }
 
 type SubscriptionNotifierConsumer struct {
 	Broker Broker
-	messagesService notificationService
+	messagesService messagesService
 	subscriptionTopicName string
 	logger tools.Logger
 }
 
 
-func NewSubscriptionNotifierConsumer(broker Broker, subscriptionTopicName string, messagesService notificationService, logger tools.Logger) (*SubscriptionNotifierConsumer) {
+func NewSubscriptionNotifierConsumer(broker Broker, subscriptionTopicName string, mService messagesService, logger tools.Logger) (*SubscriptionNotifierConsumer) {
 	return &SubscriptionNotifierConsumer{
 		Broker: broker,
-		messagesService: messagesService,
+		messagesService: mService,
 		subscriptionTopicName: subscriptionTopicName,
 		logger: logger.With("service", "queue"),
 	}

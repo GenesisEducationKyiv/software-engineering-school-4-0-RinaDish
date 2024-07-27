@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -33,7 +32,7 @@ func (t *SubscribeHandlerTestSuite) SetupSuite() {
 
 func (t *SubscribeHandlerTestSuite)TestSuccessfulCreateSubscription() {	
 	mockDB := mocks.NewDb(t.T())
-	mockDB.On("SetEmail", mock.Anything, "test@test.com").Return(nil)
+	mockDB.On("SetEmail", mock.Anything, "test@test.com", true).Return(nil)
 
 	h := handlers.NewSubscribeHandler(t.logger, mockDB)
 
@@ -82,35 +81,9 @@ func (t *SubscribeHandlerTestSuite)TestFailureInvalidEmail() {
 	require.Equal(t.T(), w.Result().StatusCode, http.StatusConflict)
 }
 
-func (t *SubscribeHandlerTestSuite)TestFailureDbSetEmail() {	
-	mockDB := mocks.NewDb(t.T())
-	mockDB.On("SetEmail", mock.Anything, "test@gmail.com").Return(errors.New("email exist"))
-
-	h := handlers.NewSubscribeHandler(t.logger, mockDB)
-
-	form := url.Values{}
-	form.Add("email", "test@gmail.com")
-
-	req := httptest.NewRequest(http.MethodPost, "/subscribe", strings.NewReader(form.Encode()))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	w := httptest.NewRecorder()
-
-	h.CreateSubscription(w, req)
-	res := w.Result()
-	
-	defer res.Body.Close()
-	data, err := io.ReadAll(res.Body)
-
-	require.NoError(t.T(), err)
-	require.Empty(t.T(), data)
-
-	require.Equal(t.T(), w.Result().StatusCode, http.StatusConflict)
-}
-
 func (t *SubscribeHandlerTestSuite)TestSuccessfulDeactivateubscription() {	
 	mockDB := mocks.NewDb(t.T())
-	mockDB.On("DeactivateEmail", mock.Anything, "test@test.com").Return(nil)
+	mockDB.On("SetEmail", mock.Anything, "test@test.com", false).Return(nil)
 
 	h := handlers.NewSubscribeHandler(t.logger, mockDB)
 

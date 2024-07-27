@@ -17,8 +17,8 @@ type SubscriptionSender interface {
 }
 
 type SubscriptionRepository interface {
-	GetMessages(ctx context.Context) ([]Message, error)
-	UpdateMessages(ctx context.Context, msgID int) error
+	GetReadyToSendMessages(ctx context.Context) ([]Message, error)
+	SetSendStatus(ctx context.Context, msgID int, send bool) error
 }
 
 type SubscriptionService struct {
@@ -36,7 +36,7 @@ func NewSubscriptionService(logger tools.Logger, sender SubscriptionSender, repo
 }
 
 func (service SubscriptionService) NotifySubscribers(ctx context.Context) error {
-	msgs, err := service.repo.GetMessages(ctx) 
+	msgs, err := service.repo.GetReadyToSendMessages(ctx) 
 
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context) error 
 			service.sender.Send(email, strconv.FormatFloat(msg.Rate, 'g', -1, 64))
 		}
 
-		err =  service.repo.UpdateMessages(ctx, msg.ID)
+		err =  service.repo.SetSendStatus(ctx, msg.ID, true)
 
 		if err != nil {
 			return err

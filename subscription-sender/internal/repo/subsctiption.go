@@ -19,7 +19,7 @@ type message struct {
 	Sent bool `gorm:"sent"`
 }
 
-func (repo *Repository) SetMessages(ctx context.Context, m services.Message) error {
+func (repo *Repository) SaveMessages(ctx context.Context, m services.Message) error {
 	msg := &message{
 		ID: m.ID,
 		Rate: m.Rate,
@@ -30,11 +30,11 @@ func (repo *Repository) SetMessages(ctx context.Context, m services.Message) err
 		SendingTime: m.SendingTime,
 		Sent: m.Sent,
 	}
+
 	return repo.DB.Table("messages").Create(&msg).WithContext(ctx).Error
 }
 
-func (repo *Repository) GetMessages(ctx context.Context) ([]services.Message, error) {
-
+func (repo *Repository) GetReadyToSendMessages(ctx context.Context) ([]services.Message, error) {
 	msgsList := make([]message, 0)
 
 	currentTime := time.Now()
@@ -45,7 +45,7 @@ func (repo *Repository) GetMessages(ctx context.Context) ([]services.Message, er
 		return nil, err
 	}
 
-	result := make([]services.Message, 0)
+	result := make([]services.Message, 0, len(msgsList))
 	for _, msg := range msgsList {
 		result = append(result, services.Message{
 			ID: msg.ID,
@@ -62,6 +62,6 @@ func (repo *Repository) GetMessages(ctx context.Context) ([]services.Message, er
 	return result, err
 }
 
-func (repo *Repository) UpdateMessages(ctx context.Context, msgID int) error {
-	return repo.DB.Model(&message{}).WithContext(ctx).Where("id = ?", msgID).Update("sent", true).Error
+func (repo *Repository) SetSendStatus(ctx context.Context, msgID int, send bool) error {
+	return repo.DB.Model(&message{}).WithContext(ctx).Where("id = ?", msgID).Update("sent", send).Error
 }

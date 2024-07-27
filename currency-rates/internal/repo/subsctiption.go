@@ -11,22 +11,18 @@ type DBEmail struct {
 	IsActive bool
 }
 
-func (repo *Repository) SetEmail(ctx context.Context, email string) error {
+func (repo *Repository) SetEmail(ctx context.Context, email string, isActive bool) error {
 	e := &DBEmail{
 		Email: email,
-		IsActive: true,
+		IsActive: isActive,
 	}
 
-	return repo.DB.Table("emails").Create(e).Error
+	return repo.DB.Table("emails").Save(e).Error
 }
 
-func (repo *Repository) GetEmails(ctx context.Context) ([]services.Email, error) {
+func (repo *Repository) GetAllActiveEmails(ctx context.Context) ([]services.Email, error) {
 	result := make([]services.Email, 0)
 	err := repo.DB.Table("emails").Where("is_active = ?", true).Find(&result).Error
 	
 	return result, err
-}
-
-func (repo *Repository) DeactivateEmail(ctx context.Context, email string) error {
-	return repo.DB.Model(services.Email{}).Where("email = ?", email).Update("is_active", false).Error
 }

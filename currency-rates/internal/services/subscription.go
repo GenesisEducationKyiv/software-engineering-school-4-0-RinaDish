@@ -27,7 +27,7 @@ type Email struct {
 }
 
 type SubscriptionDb interface {
-	GetEmails(ctx context.Context) ([]Email, error)
+	GetAllActiveEmails(ctx context.Context) ([]Email, error)
 }
 
 type SubscriptionPublisher interface {
@@ -58,7 +58,7 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context) error 
 		return err
 	}
 
-	emails, err := service.db.GetEmails(ctx)
+	emails, err := service.db.GetAllActiveEmails(ctx)
 
 	if err != nil {
 		service.logger.Error(err)

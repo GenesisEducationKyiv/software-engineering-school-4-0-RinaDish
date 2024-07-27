@@ -20,7 +20,7 @@ type Message struct {
 }
 
 type MessagesDB interface {
-	SetMessages(ctx context.Context, message Message) error
+	SaveMessages(ctx context.Context, message Message) error
 }
 
 type MessagesService struct {
@@ -39,9 +39,10 @@ func  (messagesService *MessagesService) HandleMessage(msg []byte, ctx context.C
 	var unmrshMsg Message
 	_ = json.Unmarshal(msg, &unmrshMsg)
 
-	unmrshMsg.Sent = false
 	messagesService.logger.Info("Received message: ", unmrshMsg)
-	err := messagesService.db.SetMessages(ctx, unmrshMsg)
+
+	unmrshMsg.Sent = false
+	err := messagesService.db.SaveMessages(ctx, unmrshMsg)
 
 	if err != nil {
 		messagesService.logger.Error(err)

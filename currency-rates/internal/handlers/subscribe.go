@@ -2,19 +2,16 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"regexp"
 
 	"github.com/RinaDish/currency-rates/tools"
-	"gorm.io/gorm"
 )
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type Db interface {
-	SetEmail(ctx context.Context, email string) error
-	DeactivateEmail(ctx context.Context, email string) error
+	SetEmail(ctx context.Context, email string, isActive bool) error
 }
 
 type SubscribeHandler struct {
@@ -47,10 +44,12 @@ func (handler SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *htt
 		return
 	}
 	
-	err = handler.repo.SetEmail(r.Context(), email)
+	err = handler.repo.SetEmail(r.Context(), email, true)
 	responseStatus := http.StatusOK
 	if err != nil {
-		responseStatus = http.StatusConflict
+		handler.logger.Error(err)
+
+		responseStatus = http.StatusInternalServerError
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -72,17 +71,13 @@ func (handler SubscribeHandler) DeactivateSubscription(w http.ResponseWriter, r 
 
 	email := formData.Get("email")
 	
-	err = handler.repo.DeactivateEmail(r.Context(), email)
+	err = handler.repo.SetEmail(r.Context(), email, false)
+
 	responseStatus := http.StatusOK
-	
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			responseStatus = http.StatusNotFound
-		} else if errors.Is(err, errors.New("database unavailable")) {
-			responseStatus = http.StatusServiceUnavailable
-		} else {
-			responseStatus = http.StatusInternalServerError
-		}
+		handler.logger.Error(err)
+		
+		responseStatus = http.StatusInternalServerError
 	}
 
 	w.Header().Set("Content-Type", "application/json")

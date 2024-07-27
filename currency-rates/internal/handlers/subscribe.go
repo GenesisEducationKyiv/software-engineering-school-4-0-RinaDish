@@ -11,7 +11,7 @@ import (
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type Db interface {
-	SetEmail(ctx context.Context, email string) error
+	SetEmail(ctx context.Context, email string, isActive bool) error
 }
 
 type SubscribeHandler struct {
@@ -44,10 +44,12 @@ func (handler SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *htt
 		return
 	}
 	
-	err = handler.repo.SetEmail(r.Context(), email)
+	err = handler.repo.SetEmail(r.Context(), email, true)
 	responseStatus := http.StatusOK
 	if err != nil {
-		responseStatus = http.StatusConflict
+		handler.logger.Error(err)
+
+		responseStatus = http.StatusInternalServerError
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -56,5 +58,28 @@ func (handler SubscribeHandler) CreateSubscription(w http.ResponseWriter, r *htt
 
 func isValidEmail(email string) bool {
 	return emailRegex.MatchString(email)
-  }
+}
   
+func (handler SubscribeHandler) DeactivateSubscription(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Form parse error", http.StatusBadRequest) 
+		return
+	}
+
+	formData := r.Form
+
+	email := formData.Get("email")
+	
+	err = handler.repo.SetEmail(r.Context(), email, false)
+
+	responseStatus := http.StatusOK
+	if err != nil {
+		handler.logger.Error(err)
+		
+		responseStatus = http.StatusInternalServerError
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(responseStatus)
+}

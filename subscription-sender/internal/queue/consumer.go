@@ -5,7 +5,6 @@ import (
 
 	"github.com/nats-io/nats.go"
 
-	"github.com/RinaDish/subscription-sender/internal/services"
 	"github.com/RinaDish/subscription-sender/tools"
 )
 
@@ -14,22 +13,22 @@ type Broker interface {
 	Drain() error 
 }
 
-type NotificationService interface {
-	NotifySubscribers(ctx context.Context, notification services.Notification )
+type messagesService interface {
+	HandleMessage(msg []byte, ctx context.Context)
 }
 
 type SubscriptionNotifierConsumer struct {
 	Broker Broker
-	subscriptionService NotificationService
+	messagesService messagesService
 	subscriptionTopicName string
 	logger tools.Logger
 }
 
 
-func NewSubscriptionNotifierConsumer(broker Broker, subscriptionTopicName string, subscriptionService NotificationService, logger tools.Logger) (*SubscriptionNotifierConsumer) {
+func NewSubscriptionNotifierConsumer(broker Broker, subscriptionTopicName string, mService messagesService, logger tools.Logger) (*SubscriptionNotifierConsumer) {
 	return &SubscriptionNotifierConsumer{
 		Broker: broker,
-		subscriptionService: subscriptionService,
+		messagesService: mService,
 		subscriptionTopicName: subscriptionTopicName,
 		logger: logger.With("service", "queue"),
 	}

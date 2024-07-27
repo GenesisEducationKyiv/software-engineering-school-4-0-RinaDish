@@ -8,7 +8,8 @@ import (
 )
 
 var notificationEventID uint8 = 1;
-var notificationEventType = "sended";
+var notificationEventType = "sent";
+var sendindInterval = 10 * time.Hour 
 
 type notification struct {
 	Rate   float64  `json:"rate"`
@@ -16,15 +17,17 @@ type notification struct {
 	Timestamp time.Time `json:"timestamp"` 
 	EventID uint8 `json:"eventid"` 
 	EventType string `json:"eventtype"` 
+	SendingTime time.Time `json:"sendingtime"` 
 }
 
 type Email struct {
 	ID    int    `json:"id" gorm:"id"`
 	Email string `json:"email" gorm:"email"`
+	IsActive bool `json:"is_active" gorm:"is_active"`
 }
 
 type SubscriptionDb interface {
-	GetEmails(ctx context.Context) ([]Email, error)
+	GetAllActiveEmails(ctx context.Context) ([]Email, error)
 }
 
 type SubscriptionPublisher interface {
@@ -55,7 +58,7 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context) error 
 		return err
 	}
 
-	emails, err := service.db.GetEmails(ctx)
+	emails, err := service.db.GetAllActiveEmails(ctx)
 
 	if err != nil {
 		service.logger.Error(err)
@@ -73,6 +76,7 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context) error 
 		Timestamp: time.Unix(time.Now().Unix(), 0),
 		EventID: notificationEventID,
 		EventType: notificationEventType,
+		SendingTime: time.Unix(time.Now().Add(sendindInterval).Unix(), 0),
 	}
 
 	err = service.notification.Publish(ctx, n)
@@ -80,6 +84,8 @@ func (service SubscriptionService) NotifySubscribers(ctx context.Context) error 
 		service.logger.Error(err)
 		return err
 	}
+
+	service.logger.Infof("Messege sent to subscription service...")
 
 	return nil
 }

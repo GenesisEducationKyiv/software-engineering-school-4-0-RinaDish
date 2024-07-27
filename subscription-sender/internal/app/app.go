@@ -6,9 +6,14 @@ import (
 
 	"github.com/RinaDish/subscription-sender/internal/handlers"
 	"github.com/RinaDish/subscription-sender/internal/queue"
+	"github.com/RinaDish/subscription-sender/internal/repo"
 	"github.com/RinaDish/subscription-sender/internal/routers"
 	"github.com/RinaDish/subscription-sender/internal/services"
 	"github.com/RinaDish/subscription-sender/tools"
+	"github.com/RinaDish/subscription-sender/workers"
+	"github.com/go-co-op/gocron/v2"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	"github.com/nats-io/nats.go"
 )
@@ -16,8 +21,10 @@ import (
 type App struct {
 	cfg Config
 	logger   tools.Logger
+	subscriptionCron  workers.Cron
 	router routers.Router
 	queue *queue.SubscriptionNotifierConsumer
+	db *gorm.DB
 	ctx context.Context
 }
 
@@ -27,7 +34,16 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 		return nil, err
 	}
 
-	subscriptionService := services.NewSubscriptionService(logger, emailSender)
+	db, err := gorm.Open(postgres.Open(cfg.DBURL), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+	
+	repo := repo.NewAdminRepository(db, logger)
+
+	subscriptionService := services.NewSubscriptionService(logger, emailSender, repo)
+
+	messagesService := services.NewMessagesService(repo, logger)
 
 	healthCheckHandler := handlers.NewHealthCheckHandler(logger)
 
@@ -40,21 +56,34 @@ func NewApp(cfg Config, logger tools.Logger, ctx context.Context) (*App, error) 
 
 	natsbroker := queue.NewNATSBroker(nats)
 
-	queue := queue.NewSubscriptionNotifierConsumer(natsbroker, cfg.SubscriptionTopicName, subscriptionService, logger)
+	queue := queue.NewSubscriptionNotifierConsumer(natsbroker, cfg.SubscriptionTopicName, messagesService, logger)
+
+	cron := workers.NewCron(logger)
+	task := gocron.NewTask(subscriptionService.NotifySubscribers, ctx)
+	
+	cron.RegisterTask("0 * * * *", task)
 
 	return &App{
 		cfg: cfg,
 		logger: logger,
 		router: router,
+		subscriptionCron: cron,
 		queue: queue,
+		db: db,
 		ctx: ctx,
 	}, nil
 }
 
 func (app *App) Run() error {
-	app.logger.Info("app run")
-	
+	subscriptionCron := app.subscriptionCron.StartCron()
+
 	defer func() { 
+		_ = subscriptionCron.Shutdown() 
+		
+		if db, err := app.db.DB(); err == nil {
+			_ = db.Close()
+		}
+
 		_ = app.queue.Broker.Drain()
 	}()
 
@@ -62,6 +91,8 @@ func (app *App) Run() error {
         app.logger.Error("Queue subscribe method failed")
 		return err
     }
-	
+
+	app.logger.Info("app run")
+
 	return http.ListenAndServe(app.cfg.Address, app.router.GetRouter())
 }

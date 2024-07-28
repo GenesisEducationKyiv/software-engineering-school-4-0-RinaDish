@@ -51,6 +51,7 @@ func NewMetrics() Metrics {
 		Registry: prometheus.NewRegistry(),
 	}
 	m.registerMetrics()
+
 	return m
 }
 
@@ -65,6 +66,7 @@ func (m Metrics) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.httpRequestsTotal.WithLabelValues(r.Method, r.URL.Path).Inc()
 		timer := prometheus.NewTimer(m.httpRequestDuration.WithLabelValues(r.URL.Path, r.Method))
+		
 		defer timer.ObserveDuration()
 
 		next.ServeHTTP(w, r)
@@ -79,6 +81,7 @@ func (m Metrics) MonitorDBQuery(queryName string, queryFunc func() error) error 
 	if err != nil {
 		m.errorsTotal.WithLabelValues("db_query").Inc()
 	}
+
 	return err
 }
 

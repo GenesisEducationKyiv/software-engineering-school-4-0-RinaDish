@@ -50,11 +50,11 @@ func NewMetrics() Metrics {
 		),
 		Registry: prometheus.NewRegistry(),
 	}
-	m.RegisterMetrics()
+	m.registerMetrics()
 	return m
 }
 
-func (m Metrics) RegisterMetrics() {
+func (m Metrics) registerMetrics() {
 	m.Registry.MustRegister(m.httpRequestsTotal)
 	m.Registry.MustRegister(m.httpRequestDuration)
 	m.Registry.MustRegister(m.dbQueryDuration)

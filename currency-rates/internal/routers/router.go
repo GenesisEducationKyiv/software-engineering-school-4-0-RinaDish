@@ -11,7 +11,6 @@ import (
 
 type Metrics interface {
 	MetricsHandler() http.Handler
-    RegisterMetrics()
     Middleware(next http.Handler) http.Handler
 }
 

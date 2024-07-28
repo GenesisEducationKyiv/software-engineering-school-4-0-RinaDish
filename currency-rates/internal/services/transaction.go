@@ -51,6 +51,7 @@ func (transaction Transaction) ExecuteSubscription(ctx context.Context, email st
 			time.Sleep(delay)
 			delay *= 2
 		}
+		
 		return err
 	}
 
